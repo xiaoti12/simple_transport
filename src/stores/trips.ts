@@ -112,6 +112,11 @@ export const useTripsStore = defineStore('trips', () => {
     })
   }
 
+  function clearAllTrips() {
+    trips.value = []
+    saveToStorage()
+  }
+
   return {
     trips,
     sortedTrips,
@@ -123,6 +128,7 @@ export const useTripsStore = defineStore('trips', () => {
     deleteTrip,
     updateTrip,
     loadFromStorage,
-    loadSampleData
+    loadSampleData,
+    clearAllTrips
   }
 })

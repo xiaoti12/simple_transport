@@ -262,8 +262,8 @@ const existingCities = computed(() => {
 
 // 合并并去重的城市列表
 const allCities = computed(() => {
-  const combined = [...new Set([...commonCities, ...existingCities.value])]
-  return combined.sort()
+  const combined = [...commonCities, ...existingCities.value.filter(city => !commonCities.includes(city))]
+  return combined
 })
 
 const form = reactive<Omit<TripRecord, 'id' | 'createdAt'>>({

@@ -66,20 +66,24 @@
                 <input
                   v-model="form.departure.city"
                   placeholder="出发城市"
-                  class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   required
                 />
-                <input
-                  v-model="form.departure.time"
-                  type="datetime-local"
-                  class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+                <div class="relative">
+                  <input
+                    v-model="form.departure.time"
+                    type="datetime-local"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    :class="{'text-gray-400': !form.departure.time}"
+                    required
+                  />
+                  <label v-if="!form.departure.time" class="absolute left-3 top-2 text-gray-400 text-sm pointer-events-none">出发时间</label>
+                </div>
               </div>
               <input
                 v-model="form.departure.station"
                 :placeholder="form.type === 'flight' ? '出发机场' : '出发车站'"
-                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 required
               />
             </div>
@@ -93,20 +97,24 @@
                 <input
                   v-model="form.arrival.city"
                   placeholder="到达城市"
-                  class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   required
                 />
-                <input
-                  v-model="form.arrival.time"
-                  type="datetime-local"
-                  class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+                <div class="relative">
+                  <input
+                    v-model="form.arrival.time"
+                    type="datetime-local"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    :class="{'text-gray-400': !form.arrival.time}"
+                    required
+                  />
+                  <label v-if="!form.arrival.time" class="absolute left-3 top-2 text-gray-400 text-sm pointer-events-none">到达时间</label>
+                </div>
               </div>
               <input
                 v-model="form.arrival.station"
                 :placeholder="form.type === 'flight' ? '到达机场' : '到达车站'"
-                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 required
               />
             </div>
@@ -121,7 +129,7 @@
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 required
               />
             </div>
@@ -129,7 +137,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
               <select
                 v-model="form.status"
-                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               >
                 <option value="unused">未使用</option>
                 <option value="used">已使用</option>
@@ -142,7 +150,7 @@
             <input
               v-model="form.date"
               type="date"
-              class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               required
             />
           </div>
@@ -208,3 +216,104 @@ function handleSubmit() {
   router.push('/')
 }
 </script>
+
+<style scoped>
+/* 移动端输入框优化 */
+@media (max-width: 480px) {
+  .grid {
+    gap: 8px;
+  }
+  
+  input, select {
+    font-size: 16px !important; /* 防止iOS缩放 */
+    min-height: 44px; /* 确保触摸目标足够大 */
+  }
+  
+  input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  
+  /* 日期时间选择器样式优化 */
+  input[type="datetime-local"]::-webkit-datetime-edit {
+    color: #374151;
+    padding: 0;
+  }
+  
+  input[type="datetime-local"]::-webkit-datetime-edit-text {
+    color: #6b7280;
+  }
+  
+  input[type="datetime-local"]::-webkit-datetime-edit-month-field,
+  input[type="datetime-local"]::-webkit-datetime-edit-day-field,
+  input[type="datetime-local"]::-webkit-datetime-edit-year-field,
+  input[type="datetime-local"]::-webkit-datetime-edit-hour-field,
+  input[type="datetime-local"]::-webkit-datetime-edit-minute-field {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #374151;
+  }
+  
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3e%3crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3e%3cline x1='16' y1='2' x2='16' y2='6'/%3e%3cline x1='8' y1='2' x2='8' y2='6'/%3e%3cline x1='3' y1='10' x2='21' y2='10'/%3e%3c/svg%3e") no-repeat;
+    background-size: 16px 16px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+  
+  /* 输入框聚焦时的样式 */
+  input:focus, select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  /* 边框容器优化 */
+  .border.rounded-lg {
+    border: 2px solid #e5e7eb;
+    box-shadow: none;
+  }
+  
+  /* 确保容器不会溢出 */
+  .max-w-md {
+    max-width: 100%;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+/* 时间输入框占位符样式 */
+.relative label {
+  transition: all 0.2s ease;
+}
+
+input[type="datetime-local"]:focus + label,
+input[type="datetime-local"]:not(:placeholder-shown) + label {
+  opacity: 0;
+  transform: translateY(-100%);
+}
+
+/* Chrome日期时间输入框兼容性优化 */
+input[type="datetime-local"] {
+  position: relative;
+}
+
+input[type="datetime-local"]::-webkit-inner-spin-button,
+input[type="datetime-local"]::-webkit-clear-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* 确保日期时间选择器在所有浏览器中都有合理的样式 */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+input[type="date"]:hover::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+</style>

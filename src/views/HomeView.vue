@@ -22,8 +22,18 @@
 
       <!-- 出行记录列表 -->
       <div class="space-y-3">
+        <!-- 往返行程 -->
+        <RoundTripCard
+          v-for="(roundTrip, index) in tripsStore.roundTrips.roundTrips"
+          :key="`round-${index}`"
+          :outbound="roundTrip.outbound"
+          :return-trip="roundTrip.return"
+          @delete="handleDeleteTrip"
+        />
+        
+        <!-- 单程行程 -->
         <TripCard 
-          v-for="trip in tripsStore.sortedTrips" 
+          v-for="trip in tripsStore.singleTrips" 
           :key="trip.id" 
           :trip="trip"
           @delete="handleDeleteTrip"
@@ -49,6 +59,7 @@
 import { onMounted } from 'vue'
 import { useTripsStore } from '@/stores/trips'
 import TripCard from '@/components/TripCard.vue'
+import RoundTripCard from '@/components/RoundTripCard.vue'
 import BottomNavigation from '@/components/BottomNavigation.vue'
 
 const tripsStore = useTripsStore()

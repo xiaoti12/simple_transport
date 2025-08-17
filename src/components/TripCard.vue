@@ -17,7 +17,7 @@
               <span class="flight-number">{{ getFlightNumber() }}</span>
             </div>
           </div>
-          <div class="status" :style="getStatusStyle()">
+          <div v-if="!props.isInRoundTrip" class="status" :style="getStatusStyle()">
             <span>{{ trip.status === 'used' ? '✓' : '+' }}</span> 
             {{ trip.status === 'used' ? '已使用' : '未使用' }}
           </div>
@@ -29,7 +29,7 @@
               <div class="time">{{ formatTime(trip.departure.time) }}</div>
               <div class="location">
                 {{ trip.departure.city }}
-                <span v-if="trip.departure.station !== trip.departure.city" class="terminal">
+                <span v-if="getTerminalInfo(trip.departure.station)" class="terminal">
                   {{ getTerminalInfo(trip.departure.station) }}
                 </span>
               </div>
@@ -41,7 +41,7 @@
               <div class="time">{{ formatTime(trip.arrival.time) }}</div>
               <div class="location">
                 {{ trip.arrival.city }}
-                <span v-if="trip.arrival.station !== trip.arrival.city" class="terminal">
+                <span v-if="getTerminalInfo(trip.arrival.station)" class="terminal">
                   {{ getTerminalInfo(trip.arrival.station) }}
                 </span>
               </div>
@@ -67,6 +67,7 @@ import type { TripRecord } from '@/types'
 
 const props = defineProps<{
   trip: TripRecord
+  isInRoundTrip?: boolean
 }>()
 
 defineEmits<{
@@ -138,11 +139,13 @@ function getStatusStyle() {
 }
 
 function getTerminalInfo(station: string) {
-  const terminalMatch = station.match(/([T]\d+)/i)
+  // 提取T+数字格式的航站楼信息
+  const terminalMatch = station.match(/[T]\d+/i)
   if (terminalMatch) {
-    return terminalMatch[1]
+    return terminalMatch[0].toUpperCase()
   }
   
+  // 提取火车站站名
   if (station.includes('南站')) return '南站'
   if (station.includes('北站')) return '北站' 
   if (station.includes('东站')) return '东站'

@@ -21,6 +21,50 @@ export const useTripsStore = defineStore('trips', () => {
     return result
   })
 
+  // 检测往返行程
+  const roundTrips = computed(() => {
+    const roundTripList = []
+    const usedIndexes = new Set<number>()
+    
+    for (let i = 0; i < trips.value.length; i++) {
+      if (usedIndexes.has(i)) continue
+      
+      const trip1 = trips.value[i]
+      // 提取城市名（去掉机场名）
+      const departure1 = trip1.departure.city
+      const arrival1 = trip1.arrival.city
+      
+      for (let j = i + 1; j < trips.value.length; j++) {
+        if (usedIndexes.has(j)) continue
+        
+        const trip2 = trips.value[j]
+        const departure2 = trip2.departure.city
+        const arrival2 = trip2.arrival.city
+        
+        // 检查是否为往返（A→B 和 B→A）
+        if ((departure1 === arrival2 && arrival1 === departure2)) {
+          roundTripList.push({
+            outbound: trip1,
+            return: trip2,
+            totalPrice: trip1.price + trip2.price,
+            route: `${departure1} ⇄ ${arrival1}`
+          })
+          usedIndexes.add(i)
+          usedIndexes.add(j)
+          break
+        }
+      }
+    }
+    
+    return { roundTrips: roundTripList, usedIndexes }
+  })
+
+  // 单程行程（不在往返行程中的）
+  const singleTrips = computed(() => {
+    const { usedIndexes } = roundTrips.value
+    return trips.value.filter((_, index) => !usedIndexes.has(index))
+  })
+
   function addTrip(trip: Omit<TripRecord, 'id' | 'createdAt'>) {
     const newTrip: TripRecord = {
       ...trip,
@@ -55,6 +99,9 @@ export const useTripsStore = defineStore('trips', () => {
     const stored = localStorage.getItem('simple-transport-trips')
     if (stored) {
       trips.value = JSON.parse(stored)
+    } else {
+      // 如果没有存储数据，自动加载示例数据
+      loadSampleData()
     }
   }
 
@@ -70,6 +117,8 @@ export const useTripsStore = defineStore('trips', () => {
     sortedTrips,
     totalSpent,
     tripsByType,
+    roundTrips,
+    singleTrips,
     addTrip,
     deleteTrip,
     updateTrip,

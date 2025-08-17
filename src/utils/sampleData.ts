@@ -3,56 +3,92 @@ import type { TripRecord } from '@/types'
 export const sampleTrips: TripRecord[] = [
   {
     id: '1',
-    type: 'train',
-    date: '2024-08-15',
+    type: 'flight',
+    date: '2025-07-27',
     departure: {
-      time: '2024-08-15T08:00',
-      city: '北京',
-      station: '北京南站'
+      time: '20:25',
+      city: '重庆',
+      station: '重庆江北T3'
     },
     arrival: {
-      time: '2024-08-15T12:30',
-      city: '上海',
-      station: '上海虹桥站'
+      time: '23:15',
+      city: '北京',
+      station: '北京大兴'
     },
-    price: 553,
+    price: 1280,
     status: 'used',
-    createdAt: '2024-08-10T10:00:00Z'
+    createdAt: '2025-07-25T10:00:00Z'
   },
   {
     id: '2',
     type: 'flight',
-    date: '2024-08-20',
+    date: '2025-07-25',
     departure: {
-      time: '2024-08-20T14:30',
-      city: '上海',
-      station: '浦东国际机场T2'
+      time: '21:15',
+      city: '北京',
+      station: '北京首都T2'
     },
     arrival: {
-      time: '2024-08-20T17:45',
-      city: '深圳',
-      station: '宝安国际机场T3'
+      time: '00:15+1',
+      city: '重庆',
+      station: '重庆江北T3'
     },
-    price: 850,
+    price: 956,
     status: 'used',
-    createdAt: '2024-08-18T15:30:00Z'
+    createdAt: '2025-07-23T15:30:00Z'
   },
   {
     id: '3',
-    type: 'train',
-    date: '2024-08-25',
+    type: 'flight',
+    date: '2025-07-13',
     departure: {
-      time: '2024-08-25T19:20',
-      city: '深圳',
-      station: '深圳北站'
+      time: '17:30',
+      city: '上海',
+      station: '上海虹桥T2'
     },
     arrival: {
-      time: '2024-08-26T07:55',
+      time: '20:00',
       city: '北京',
-      station: '北京西站'
+      station: '北京首都T3'
     },
-    price: 628,
+    price: 780,
+    status: 'used',
+    createdAt: '2025-07-11T09:15:00Z'
+  },
+  {
+    id: '4',
+    type: 'flight',
+    date: '2025-05-20',
+    departure: {
+      time: '20:00',
+      city: '重庆',
+      station: '重庆江北T3'
+    },
+    arrival: {
+      time: '22:25',
+      city: '北京',
+      station: '北京大兴'
+    },
+    price: 1150,
+    status: 'used',
+    createdAt: '2025-05-18T14:20:00Z'
+  },
+  {
+    id: '5',
+    type: 'flight',
+    date: '2025-05-03',
+    departure: {
+      time: '18:25',
+      city: '北京',
+      station: '北京大兴'
+    },
+    arrival: {
+      time: '21:10',
+      city: '重庆',
+      station: '重庆江北T3'
+    },
+    price: 890,
     status: 'unused',
-    createdAt: '2024-08-22T09:15:00Z'
+    createdAt: '2025-05-01T16:45:00Z'
   }
 ]

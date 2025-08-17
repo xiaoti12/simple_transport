@@ -63,21 +63,38 @@
             <h3 class="font-medium mb-3 text-green-600">🚀 出发</h3>
             <div class="space-y-3">
               <div class="grid grid-cols-2 gap-3">
-                <input
-                  v-model="form.departure.city"
-                  placeholder="出发城市"
-                  class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  required
-                />
                 <div class="relative">
+                  <input
+                    v-model="departureCityInput"
+                    @input="onDepartureCityInput"
+                    @focus="showDepartureCityList = true"
+                    @blur="onDepartureCityBlur"
+                    placeholder="出发城市"
+                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm w-full"
+                    required
+                  />
+                  <div v-if="showDepartureCityList && filteredDepartureCities.length > 0" 
+                       class="city-dropdown">
+                    <div v-for="city in filteredDepartureCities.slice(0, 8)" 
+                         :key="city"
+                         @click="selectDepartureCity(city)"
+                         class="city-option">
+                      {{ city }}
+                    </div>
+                  </div>
+                </div>
+                <div class="relative time-input-wrapper">
                   <input
                     v-model="form.departure.time"
                     type="datetime-local"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm time-input"
                     :class="{'text-gray-400': !form.departure.time}"
                     required
                   />
-                  <label v-if="!form.departure.time" class="absolute left-3 top-2 text-gray-400 text-sm pointer-events-none">出发时间</label>
+                  <div class="time-input-hint">
+                    <span class="time-icon">🕰️</span>
+                    <span class="time-text">点击选择时间</span>
+                  </div>
                 </div>
               </div>
               <input
@@ -94,21 +111,38 @@
             <h3 class="font-medium mb-3 text-red-600">🏁 到达</h3>
             <div class="space-y-3">
               <div class="grid grid-cols-2 gap-3">
-                <input
-                  v-model="form.arrival.city"
-                  placeholder="到达城市"
-                  class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  required
-                />
                 <div class="relative">
+                  <input
+                    v-model="arrivalCityInput"
+                    @input="onArrivalCityInput"
+                    @focus="showArrivalCityList = true"
+                    @blur="onArrivalCityBlur"
+                    placeholder="到达城市"
+                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm w-full"
+                    required
+                  />
+                  <div v-if="showArrivalCityList && filteredArrivalCities.length > 0" 
+                       class="city-dropdown">
+                    <div v-for="city in filteredArrivalCities.slice(0, 8)" 
+                         :key="city"
+                         @click="selectArrivalCity(city)"
+                         class="city-option">
+                      {{ city }}
+                    </div>
+                  </div>
+                </div>
+                <div class="relative time-input-wrapper">
                   <input
                     v-model="form.arrival.time"
                     type="datetime-local"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm time-input"
                     :class="{'text-gray-400': !form.arrival.time}"
                     required
                   />
-                  <label v-if="!form.arrival.time" class="absolute left-3 top-2 text-gray-400 text-sm pointer-events-none">到达时间</label>
+                  <div class="time-input-hint">
+                    <span class="time-icon">🕰️</span>
+                    <span class="time-text">点击选择时间</span>
+                  </div>
                 </div>
               </div>
               <input
@@ -145,15 +179,6 @@
             </div>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">出行日期</label>
-            <input
-              v-model="form.date"
-              type="date"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              required
-            />
-          </div>
 
           <button
             type="submit"
@@ -183,7 +208,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTripsStore } from '@/stores/trips'
 import BottomNavigation from '@/components/BottomNavigation.vue'
@@ -193,6 +218,29 @@ const router = useRouter()
 const tripsStore = useTripsStore()
 
 const mode = ref<'manual' | 'ai'>('manual')
+
+// 常用城市列表
+const commonCities = [
+  '北京', '上海', '广州', '深圳', '成都', '重庆', 
+  '杭州', '西安', '南京', '武汉', '天津', '苏州',
+  '长沙', '郑州', '青岛', '大连', '宁波', '厦门'
+]
+
+// 从已有行程中提取城市
+const existingCities = computed(() => {
+  const cities = new Set<string>()
+  tripsStore.trips.forEach(trip => {
+    cities.add(trip.departure.city)
+    cities.add(trip.arrival.city)
+  })
+  return Array.from(cities).sort()
+})
+
+// 合并并去重的城市列表
+const allCities = computed(() => {
+  const combined = [...new Set([...commonCities, ...existingCities.value])]
+  return combined.sort()
+})
 
 const form = reactive<Omit<TripRecord, 'id' | 'createdAt'>>({
   type: 'train',
@@ -211,7 +259,64 @@ const form = reactive<Omit<TripRecord, 'id' | 'createdAt'>>({
   status: 'unused'
 })
 
+// 城市输入相关状态
+const showDepartureCityList = ref(false)
+const showArrivalCityList = ref(false)
+const departureCityInput = ref(form.departure.city)
+const arrivalCityInput = ref(form.arrival.city)
+
+// 城市选择相关函数
+function selectDepartureCity(city: string) {
+  form.departure.city = city
+  departureCityInput.value = city
+  showDepartureCityList.value = false
+}
+
+function selectArrivalCity(city: string) {
+  form.arrival.city = city
+  arrivalCityInput.value = city
+  showArrivalCityList.value = false
+}
+
+function onDepartureCityInput() {
+  form.departure.city = departureCityInput.value
+  showDepartureCityList.value = departureCityInput.value.length > 0
+}
+
+function onArrivalCityInput() {
+  form.arrival.city = arrivalCityInput.value
+  showArrivalCityList.value = arrivalCityInput.value.length > 0
+}
+
+function onDepartureCityBlur() {
+  setTimeout(() => showDepartureCityList.value = false, 200)
+}
+
+function onArrivalCityBlur() {
+  setTimeout(() => showArrivalCityList.value = false, 200)
+}
+
+// 过滤城市列表
+const filteredDepartureCities = computed(() => {
+  if (!departureCityInput.value) return allCities.value
+  return allCities.value.filter(city => 
+    city.includes(departureCityInput.value)
+  )
+})
+
+const filteredArrivalCities = computed(() => {
+  if (!arrivalCityInput.value) return allCities.value
+  return allCities.value.filter(city => 
+    city.includes(arrivalCityInput.value)
+  )
+})
+
 function handleSubmit() {
+  // 从出发时间自动提取日期
+  if (form.departure.time) {
+    form.date = form.departure.time.split('T')[0]
+  }
+  
   tripsStore.addTrip(form)
   router.push('/')
 }
@@ -283,15 +388,83 @@ function handleSubmit() {
   }
 }
 
-/* 时间输入框占位符样式 */
-.relative label {
-  transition: all 0.2s ease;
+/* 时间输入框样式优化 */
+.time-input-wrapper {
+  position: relative;
 }
 
-input[type="datetime-local"]:focus + label,
-input[type="datetime-local"]:not(:placeholder-shown) + label {
+.time-input-hint {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.time-input:focus + .time-input-hint,
+.time-input:not(:placeholder-shown) + .time-input-hint {
   opacity: 0;
-  transform: translateY(-100%);
+  transform: translateY(-50%) scale(0.8);
+}
+
+.time-input:valid + .time-input-hint {
+  opacity: 0;
+}
+
+.time-icon {
+  font-size: 10px;
+}
+
+.time-text {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+/* 城市选择下拉框样式 */
+.city-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.city-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.city-option:last-child {
+  border-bottom: none;
+}
+
+.city-option:hover {
+  background-color: #f8fafc;
+}
+
+.city-option:active {
+  background-color: #e2e8f0;
 }
 
 /* Chrome日期时间输入框兼容性优化 */

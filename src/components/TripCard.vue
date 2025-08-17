@@ -107,11 +107,50 @@ function getAirlineColor() {
 
 function getAirlineShort() {
   if (props.trip.type === 'train') return '🚄'
-  if (props.trip.type === 'flight') return '✈️'
-  return '🚇'
+  
+  // 使用航空公司名称的首个汉字作为图标
+  if (props.trip.airline) {
+    // 提取公司名称中的关键字符
+    const airlineNames: Record<string, string> = {
+      '中国国际航空': '国',
+      '中国东方航空': '东',
+      '中国南方航空': '南',
+      '海南航空': '海',
+      '深圳航空': '深',
+      '四川航空': '川',
+      '厦门航空': '厦',
+      '春秋航空': '春',
+      '吉祥航空': '吉',
+      '山东航空': '鲁',
+      '天津航空': '津',
+      '首都航空': '首',
+      '西部航空': '西',
+      '祥鹏航空': '祥',
+      '九元航空': '九',
+      '联合航空': '联'
+    }
+    
+    // 查找匹配的航空公司
+    for (const [airline, shortName] of Object.entries(airlineNames)) {
+      if (props.trip.airline.includes(airline.slice(-3))) { // 匹配后三个字如"国际航空"
+        return shortName
+      }
+    }
+    
+    // 如果没有匹配到，返回第一个汉字
+    const firstChar = props.trip.airline.charAt(0)
+    if (/[\u4e00-\u9fff]/.test(firstChar)) {
+      return firstChar
+    }
+  }
+  
+  return '✈️'
 }
 
 function getAirlineName() {
+  if (props.trip.airline) {
+    return props.trip.airline
+  }
   if (props.trip.type === 'train') {
     return '高速铁路'
   }
@@ -119,6 +158,9 @@ function getAirlineName() {
 }
 
 function getFlightNumber() {
+  if (props.trip.flightNumber) {
+    return props.trip.flightNumber
+  }
   if (props.trip.type === 'train') {
     return 'G1234'
   }
@@ -139,19 +181,18 @@ function getStatusStyle() {
 }
 
 function getTerminalInfo(station: string) {
-  // 提取T+数字格式的航站楼信息
-  const terminalMatch = station.match(/[T]\d+/i)
-  if (terminalMatch) {
-    return terminalMatch[0].toUpperCase()
+  // 去掉城市名前缀，返回完整的机场/车站名称
+  const cityPrefixes = ['北京', '上海', '重庆', '广州', '深圳', '成都', '杭州', '西安', '南京', '武汉', '天津', '苏州']
+  
+  let cleanStation = station
+  for (const city of cityPrefixes) {
+    if (station.startsWith(city)) {
+      cleanStation = station.slice(city.length)
+      break
+    }
   }
   
-  // 提取火车站站名
-  if (station.includes('南站')) return '南站'
-  if (station.includes('北站')) return '北站' 
-  if (station.includes('东站')) return '东站'
-  if (station.includes('西站')) return '西站'
-  
-  return ''
+  return cleanStation || ''
 }
 </script>
 

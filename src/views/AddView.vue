@@ -154,6 +154,30 @@
             </div>
           </div>
 
+          <!-- 航班/车次信息 -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                {{ form.type === 'flight' ? '航空公司' : '铁路公司' }}
+              </label>
+              <input
+                v-model="form.airline"
+                :placeholder="form.type === 'flight' ? '中国东方航空' : '中国国家铁路'"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                {{ form.type === 'flight' ? '航班号' : '车次号' }}
+              </label>
+              <input
+                v-model="form.flightNumber"
+                :placeholder="form.type === 'flight' ? 'MU5138' : 'G1234'"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            </div>
+          </div>
+
           <!-- 其他信息 -->
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -256,7 +280,9 @@ const form = reactive<Omit<TripRecord, 'id' | 'createdAt'>>({
     station: ''
   },
   price: 0,
-  status: 'unused'
+  status: 'unused',
+  airline: '',
+  flightNumber: ''
 })
 
 // 城市输入相关状态

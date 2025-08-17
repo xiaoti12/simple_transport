@@ -33,3 +33,4 @@ dist-ssr
 
 # others
 .ai_material
+tsconfig.tsbuildinfo

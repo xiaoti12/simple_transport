@@ -53,11 +53,15 @@ export const useTripsStore = defineStore('trips', () => {
         
         // 检查是否为往返（A→B 和 B→A）
         if ((departure1 === arrival2 && arrival1 === departure2)) {
+          // 按时间排序，确定去程和返程
+          const earlierTrip = new Date(trip1.date) <= new Date(trip2.date) ? trip1 : trip2
+          const laterTrip = new Date(trip1.date) <= new Date(trip2.date) ? trip2 : trip1
+          
           roundTripList.push({
-            outbound: trip1,
-            return: trip2,
+            outbound: earlierTrip,
+            return: laterTrip,
             totalPrice: trip1.price + trip2.price,
-            route: `${departure1} ⇄ ${arrival1}`
+            route: `${earlierTrip.departure.city} ⇄ ${earlierTrip.arrival.city}`
           })
           usedIndexes.add(i)
           usedIndexes.add(j)

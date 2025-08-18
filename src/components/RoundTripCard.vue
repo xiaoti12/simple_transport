@@ -8,11 +8,11 @@
       <div class="round-trip-total">总计 ¥{{ totalPrice.toLocaleString() }}</div>
     </div>
     <div class="round-trip-content">
-      <TripCard :trip="outbound" :is-in-round-trip="true" />
+      <TripCard :trip="sortedTrips[0]" :is-in-round-trip="true" />
       <div class="round-trip-connector">
         <div class="connector-icon">⇅</div>
       </div>
-      <TripCard :trip="returnTrip" :is-in-round-trip="true" />
+      <TripCard :trip="sortedTrips[1]" :is-in-round-trip="true" />
     </div>
   </div>
 </template>
@@ -27,6 +27,11 @@ const props = defineProps<{
   returnTrip: TripRecord
 }>()
 
+// 按时间倒序排列卡片（最新的在上面）
+const sortedTrips = computed(() => {
+  const trips = [props.outbound, props.returnTrip]
+  return trips.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+})
 
 const route = computed(() => {
   return `${props.outbound.departure.city} ⇄ ${props.outbound.arrival.city}`

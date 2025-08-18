@@ -167,6 +167,7 @@ const notes = ref('')
 const hasChanges = ref(false)
 const saving = ref(false)
 const isEditing = ref(false)
+const isInitialized = ref(false)
 
 
 onMounted(() => {
@@ -176,6 +177,10 @@ onMounted(() => {
     if (foundTrip) {
       trip.value = { ...foundTrip }
       notes.value = (foundTrip as any).notes || ''
+      // 延迟标记为已初始化，避免初始赋值触发 markChanged
+      setTimeout(() => {
+        isInitialized.value = true
+      }, 0)
     } else {
       router.push('/')
     }
@@ -183,7 +188,7 @@ onMounted(() => {
 })
 
 watch(trip, () => {
-  if (trip.value) {
+  if (trip.value && isInitialized.value) {
     markChanged()
   }
 }, { deep: true })

@@ -444,13 +444,17 @@ function showMoreOptions() {
   color: inherit;
 }
 
-/* 价格编辑时的特殊样式 */
-.bg-blue-500 .editable-field.editing .edit-input {
-  color: #1e40af !important;
+/* 价格编辑时的特殊样式 - 更具体的选择器 */
+.bg-blue-500 .editable-field.editing {
   background: white !important;
+  color: #1e40af !important;
   border-radius: 4px;
   padding: 2px 4px;
-  border: 1px solid #ddd !important;
+}
+
+.bg-blue-500 .editable-field.editing .edit-input {
+  color: #1e40af !important;
+  background: transparent !important;
 }
 
 .status-toggle {

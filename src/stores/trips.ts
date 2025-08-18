@@ -16,15 +16,24 @@ export const useTripsStore = defineStore('trips', () => {
   const trips = ref<TripRecord[]>([])
   const travelerConfig = ref<TravelerConfig>({ availableTravelers: ['我'] })
 
+  // 自动加载数据的标志
+  let isLoaded = false
+
   const sortedTrips = computed(() => {
+    // 确保数据已加载
+    if (!isLoaded) loadFromStorage()
     return [...trips.value].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   })
 
   const totalSpent = computed(() => {
+    // 确保数据已加载
+    if (!isLoaded) loadFromStorage()
     return trips.value.reduce((sum, trip) => sum + trip.price, 0)
   })
 
   const tripsByType = computed(() => {
+    // 确保数据已加载
+    if (!isLoaded) loadFromStorage()
     const result = { flight: 0, train: 0 }
     trips.value.forEach(trip => {
       result[trip.type]++
@@ -34,6 +43,8 @@ export const useTripsStore = defineStore('trips', () => {
 
   // 检测往返行程
   const roundTrips = computed(() => {
+    // 确保数据已加载
+    if (!isLoaded) loadFromStorage()
     const roundTripList = []
     const usedIndexes = new Set<number>()
     
@@ -153,12 +164,24 @@ export const useTripsStore = defineStore('trips', () => {
   }
 
   function saveToStorage() {
+    console.log('保存数据到localStorage:', {
+      trips: trips.value.length,
+      travelers: travelerConfig.value.availableTravelers
+    })
     localStorage.setItem('simple-transport-trips', JSON.stringify(trips.value))
     localStorage.setItem('simple-transport-traveler-config', JSON.stringify(travelerConfig.value))
   }
 
+  // 出行人配置的 getter，确保数据已加载
+  const getTravelerConfig = computed(() => {
+    if (!isLoaded) loadFromStorage()
+    return travelerConfig.value
+  })
+
   // 出行人配置管理
   function addTraveler(name: string) {
+    // 确保数据已加载
+    if (!isLoaded) loadFromStorage()
     if (!travelerConfig.value.availableTravelers.includes(name)) {
       travelerConfig.value.availableTravelers.push(name)
       saveToStorage()
@@ -166,6 +189,8 @@ export const useTripsStore = defineStore('trips', () => {
   }
 
   function removeTraveler(name: string) {
+    // 确保数据已加载
+    if (!isLoaded) loadFromStorage()
     // 不能删除"我"
     if (name === '我') return
     
@@ -177,6 +202,8 @@ export const useTripsStore = defineStore('trips', () => {
   }
 
   function updateTravelerList(travelers: string[]) {
+    // 确保数据已加载
+    if (!isLoaded) loadFromStorage()
     // 确保"我"始终在列表中
     if (!travelers.includes('我')) {
       travelers.unshift('我')
@@ -185,8 +212,8 @@ export const useTripsStore = defineStore('trips', () => {
     saveToStorage()
   }
 
-  // 修复重复ID的函数
-  function fixDuplicateIds() {
+  // 修复重复ID的函数，返回是否有变化
+  function fixDuplicateIds(): boolean {
     const seenIds = new Set<string>()
     const existingIds = new Set(trips.value.map(t => t.id))
     let hasChanges = false
@@ -205,39 +232,55 @@ export const useTripsStore = defineStore('trips', () => {
     })
 
     if (hasChanges) {
-      saveToStorage()
       console.log('已修复数据中的重复ID问题')
     }
+    
+    return hasChanges
   }
 
   function loadFromStorage() {
-    const stored = localStorage.getItem('simple-transport-trips')
-    if (stored) {
-      trips.value = JSON.parse(stored)
-      // 加载后检查并修复重复ID
-      fixDuplicateIds()
-      // 兼容旧数据：为没有travelers字段的旅行记录添加默认值
-      trips.value.forEach(trip => {
-        if (!trip.travelers) {
-          trip.travelers = ['我']
-        }
-      })
-      saveToStorage()
-    } else {
-      // 如果没有存储数据，自动加载示例数据
-      loadSampleData()
-    }
-
-    // 加载出行人配置
+    if (isLoaded) return // 防止重复加载
+    
+    console.log('开始从localStorage加载数据')
+    
+    // 先加载出行人配置
     const storedTravelerConfig = localStorage.getItem('simple-transport-traveler-config')
     if (storedTravelerConfig) {
+      console.log('找到存储的出行人配置:', storedTravelerConfig)
       travelerConfig.value = JSON.parse(storedTravelerConfig)
       // 确保"我"在列表中
       if (!travelerConfig.value.availableTravelers.includes('我')) {
         travelerConfig.value.availableTravelers.unshift('我')
+      }
+      console.log('加载出行人配置完成:', travelerConfig.value.availableTravelers)
+    } else {
+      console.log('未找到存储的出行人配置，使用默认值')
+    }
+    
+    // 再加载出行记录
+    const stored = localStorage.getItem('simple-transport-trips')
+    if (stored) {
+      trips.value = JSON.parse(stored)
+      // 加载后检查并修复重复ID
+      let idFixed = fixDuplicateIds()
+      // 兼容旧数据：为没有travelers字段的旅行记录添加默认值
+      let needsSave = false
+      trips.value.forEach(trip => {
+        if (!trip.travelers) {
+          trip.travelers = ['我']
+          needsSave = true
+        }
+      })
+      // 只有在有变化时才保存
+      if (idFixed || needsSave) {
         saveToStorage()
       }
+    } else {
+      // 如果没有存储数据，自动加载示例数据
+      loadSampleData()
     }
+    
+    isLoaded = true
   }
 
   function loadSampleData() {
@@ -260,7 +303,7 @@ export const useTripsStore = defineStore('trips', () => {
     roundTrips,
     singleTrips,
     sortedAllTrips,
-    travelerConfig,
+    travelerConfig: getTravelerConfig,
     addTrip,
     deleteTrip,
     getTripById,

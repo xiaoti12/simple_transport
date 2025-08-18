@@ -62,7 +62,7 @@ export class SyncService {
     }
 
     if (syncData.travelerConfig) {
-      tripsStore.travelerConfig = syncData.travelerConfig
+      tripsStore.updateTravelerList(syncData.travelerConfig.availableTravelers)
       console.log('已恢复出行人配置')
     }
   }

@@ -84,12 +84,53 @@ interface TripRecord {
 
 ## 部署
 
-项目支持部署到Vercel等静态托管平台。
+### Vercel 部署
+
+项目已配置好Vercel部署，支持以下方式：
+
+#### 方法一：通过Vercel CLI部署
+
+```bash
+# 安装Vercel CLI
+npm i -g vercel
+
+# 登录Vercel账户
+vercel login
+
+# 在项目根目录执行部署
+vercel
+
+# 生产环境部署
+vercel --prod
+```
+
+#### 方法二：通过GitHub集成
+
+1. 将项目推送到GitHub仓库
+2. 在 [Vercel Dashboard](https://vercel.com/dashboard) 点击 "New Project"
+3. 选择你的GitHub仓库
+4. Vercel会自动检测项目配置并部署
+
+#### 配置说明
+
+项目包含 `vercel.json` 配置文件，包含以下设置：
+- **构建命令**: `npm run build`
+- **输出目录**: `dist`
+- **框架检测**: Vite
+- **路由重写**: SPA路由支持
+
+#### 环境变量
+
+如果需要配置环境变量，可在Vercel Dashboard的项目设置中添加。
+
+#### 自定义域名
+
+部署成功后可在Vercel Dashboard中配置自定义域名。
 
 ## 开发计划
 
-- [ ] AI智能识别票据功能
-- [ ] WebDAV云同步
+- [x] AI智能识别票据功能
+- [x] WebDAV云同步
 - [ ] PWA支持
 - [ ] 主题切换
 - [ ] 数据导入导出

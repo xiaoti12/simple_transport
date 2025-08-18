@@ -33,21 +33,21 @@ module.exports = async function handler(req, res) {
     }
 
     // 设置请求头
-    const headers: Record<string, string> = {
+    const headers = {
       'Authorization': authorization,
       'User-Agent': 'WebDAV-Client/1.0'
     }
 
     // 处理Content-Type和Depth头
     if (req.headers['content-type']) {
-      headers['Content-Type'] = req.headers['content-type'] as string
+      headers['Content-Type'] = req.headers['content-type']
     }
     if (req.headers['depth']) {
-      headers['Depth'] = req.headers['depth'] as string
+      headers['Depth'] = req.headers['depth']
     }
 
     // 处理请求体
-    let body: string | undefined
+    let body
     if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
       if (req.body) {
         body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body)

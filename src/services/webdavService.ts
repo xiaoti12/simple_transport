@@ -23,7 +23,10 @@ export class WebDAVService {
       if (this.config.useProxy) {
         // 检测是否为Koofr服务
         if (this.config.url.includes('app.koofr.net')) {
-          webdavUrl = this.config.url.replace('https://app.koofr.net/dav', '/api/webdav-proxy')
+          // 提取路径部分，例如从 https://app.koofr.net/dav/Koofr 提取 Koofr
+          const pathMatch = this.config.url.match(/\/dav\/(.*)$/)
+          const servicePath = pathMatch ? pathMatch[1] : ''
+          webdavUrl = `/api/webdav-proxy?path=${encodeURIComponent(servicePath)}`
         } else {
           console.warn('代理模式当前仅支持Koofr WebDAV服务')
         }

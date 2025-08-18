@@ -2,16 +2,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "functions": {
-    "api/webdav-proxy/[...path].ts": {
-      "runtime": "@vercel/node@2.15.10"
-    }
-  },
   "rewrites": [
-    {
-      "source": "/api/webdav-proxy/(.*)",
-      "destination": "/api/webdav-proxy/$1"
-    },
     {
       "source": "/(.*)",
       "destination": "/index.html"

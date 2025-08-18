@@ -4,7 +4,7 @@
   "framework": "vite",
   "functions": {
     "api/webdav-proxy/[...path].ts": {
-      "runtime": "nodejs18.x"
+      "runtime": "@vercel/node@2.15.10"
     }
   },
   "rewrites": [

@@ -24,3 +24,18 @@ export interface AIConfig {
   model: string
   token: string
 }
+
+export interface WebDAVConfig {
+  url: string
+  username: string
+  password: string
+  enabled: boolean
+  useProxy: boolean
+}
+
+export interface SyncData {
+  trips: TripRecord[]
+  aiConfig: AIConfig | null
+  exportDate: string
+  version: string
+}

@@ -100,6 +100,146 @@
         </div>
       </div>
 
+      <!-- WebDAV同步配置 -->
+      <div class="bg-white rounded-lg p-4 mb-6 shadow-sm">
+        <h2 class="text-lg font-medium mb-4 flex items-center">
+          ☁️ WebDAV云同步
+        </h2>
+
+        <form @submit.prevent="saveWebdavConfig" class="space-y-4">
+          <!-- 启用开关 -->
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-medium">启用WebDAV同步</h3>
+              <p class="text-sm text-gray-500">开启后可与WebDAV服务器同步数据</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" v-model="webdavConfig.enabled" class="sr-only peer" />
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-medium">使用代理模式</h3>
+              <p class="text-sm text-gray-500">解决CORS跨域访问问题（推荐开启）</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" v-model="webdavConfig.useProxy" class="sr-only peer" />
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          <div v-if="webdavConfig.enabled" class="space-y-4">
+            <!-- WebDAV服务器地址 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                WebDAV服务器地址
+              </label>
+              <input v-model="webdavConfig.url" type="url" placeholder="https://your-webdav-server.com/dav"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                required />
+              <p class="text-xs text-gray-500 mt-1">
+                支持各种WebDAV服务，如NextCloud、ownCloud等
+              </p>
+            </div>
+
+            <!-- 用户名 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                用户名
+              </label>
+              <input v-model="webdavConfig.username" type="text" placeholder="username"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                required />
+            </div>
+
+            <!-- 密码 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                密码
+              </label>
+              <div class="relative">
+                <input v-model="webdavConfig.password" :type="showWebdavPassword ? 'text' : 'password'" placeholder="password"
+                  class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  required />
+                <button type="button" @click="showWebdavPassword = !showWebdavPassword"
+                  class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  {{ showWebdavPassword ? '👁️' : '🙈' }}
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">
+                建议使用应用专用密码（如果支持）
+              </p>
+            </div>
+
+            <!-- 保存配置按钮 -->
+            <button type="submit"
+              class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+              保存WebDAV配置
+            </button>
+          </div>
+        </form>
+
+        <!-- 测试连接和同步功能 -->
+        <div v-if="webdavConfig.enabled" class="mt-4 pt-4 border-t space-y-3">
+          <!-- 测试连接 -->
+          <button @click="testWebdavConnection" :disabled="!isWebdavConfigValid || isWebdavTesting"
+            class="w-full bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+            {{ isWebdavTesting ? '测试中...' : '测试连接' }}
+          </button>
+
+          <!-- WebDAV测试结果显示 -->
+          <div v-if="webdavTestResult" class="p-3 rounded-lg"
+            :class="webdavTestResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+            <div class="flex items-center">
+              <span class="mr-2">{{ webdavTestResult.success ? '✅' : '❌' }}</span>
+              <span class="text-sm" :class="webdavTestResult.success ? 'text-green-800' : 'text-red-800'">
+                {{ webdavTestResult.message }}
+              </span>
+            </div>
+          </div>
+
+          <!-- 同步功能按钮 -->
+          <div class="grid grid-cols-2 gap-3">
+            <button @click="uploadToWebdav" :disabled="!isWebdavConfigValid || isSyncing"
+              class="bg-orange-600 text-white py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
+              {{ isSyncing ? '同步中...' : '⬆️ 上传数据' }}
+            </button>
+            
+            <button @click="downloadFromWebdav" :disabled="!isWebdavConfigValid || isSyncing"
+              class="bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
+              {{ isSyncing ? '同步中...' : '⬇️ 下载数据' }}
+            </button>
+          </div>
+
+          <!-- 同步结果显示 -->
+          <div v-if="syncResult" class="p-3 rounded-lg"
+            :class="syncResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+            <div class="flex items-center">
+              <span class="mr-2">{{ syncResult.success ? '✅' : '❌' }}</span>
+              <span class="text-sm" :class="syncResult.success ? 'text-green-800' : 'text-red-800'">
+                {{ syncResult.message }}
+              </span>
+            </div>
+          </div>
+
+          <!-- 同步说明 -->
+          <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+            <p class="text-xs text-blue-800">
+              📋 <strong>同步说明：</strong><br>
+              • 上传：将本地的出行记录和AI配置上传到WebDAV服务器<br>
+              • 下载：从WebDAV服务器下载数据并完全覆盖本地数据<br>
+              • 同步文件：simple-transport-sync.json<br><br>
+              ⚠️ <strong>CORS问题解决方案：</strong><br>
+              • 推荐启用"使用代理模式"来解决CORS跨域访问问题<br>
+              • 当前代理模式支持Koofr WebDAV服务<br>
+              • 如使用其他WebDAV服务出现跨域错误，请关闭代理模式或配置服务器CORS
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- 其他设置 -->
       <div class="bg-white rounded-lg p-4 shadow-sm">
         <h2 class="text-lg font-medium mb-4 flex items-center">
@@ -138,16 +278,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useTripsStore } from '@/stores/trips'
 import BottomNavigation from '@/components/BottomNavigation.vue'
-import type { AIConfig } from '@/types'
+import { createSyncService } from '@/services/syncService'
+import { getWebDAVConfig, saveWebDAVConfig } from '@/services/webdavService'
+import type { AIConfig, WebDAVConfig } from '@/types'
 
 const tripsStore = useTripsStore()
+const syncService = createSyncService()
 
 const showToken = ref(false)
+const showWebdavPassword = ref(false)
 const isTesting = ref(false)
+const isWebdavTesting = ref(false)
+const isSyncing = ref(false)
 const testResult = ref<{ success: boolean; message: string } | null>(null)
+const webdavTestResult = ref<{ success: boolean; message: string } | null>(null)
+const syncResult = ref<{ success: boolean; message: string } | null>(null)
 
 const aiConfig = reactive<AIConfig>({
   baseUrl: '',
@@ -155,9 +303,21 @@ const aiConfig = reactive<AIConfig>({
   token: ''
 })
 
+const webdavConfig = reactive<WebDAVConfig>({
+  url: '',
+  username: '',
+  password: '',
+  enabled: false,
+  useProxy: true
+})
+
 // 检查配置是否有效
 const isConfigValid = computed(() => {
   return aiConfig.baseUrl && aiConfig.model && aiConfig.token
+})
+
+const isWebdavConfigValid = computed(() => {
+  return webdavConfig.url && webdavConfig.username && webdavConfig.password
 })
 
 // 加载保存的配置
@@ -170,6 +330,11 @@ function loadConfig() {
     } catch (error) {
       console.error('加载AI配置失败:', error)
     }
+  }
+
+  const webdavSaved = getWebDAVConfig()
+  if (webdavSaved) {
+    Object.assign(webdavConfig, webdavSaved)
   }
 }
 
@@ -252,6 +417,93 @@ function confirmClearData() {
     }
   }
 }
+
+// 保存WebDAV配置
+function saveWebdavConfig() {
+  try {
+    saveWebDAVConfig(webdavConfig)
+    webdavTestResult.value = { success: true, message: 'WebDAV配置保存成功!' }
+    setTimeout(() => {
+      webdavTestResult.value = null
+    }, 3000)
+  } catch (error) {
+    console.error('保存WebDAV配置失败:', error)
+    webdavTestResult.value = { success: false, message: '保存失败，请重试' }
+  }
+}
+
+// 测试WebDAV连接
+async function testWebdavConnection() {
+  if (!isWebdavConfigValid.value) return
+
+  isWebdavTesting.value = true
+  webdavTestResult.value = null
+
+  try {
+    const success = await syncService.testWebDAVConnection()
+    
+    if (success) {
+      webdavTestResult.value = { success: true, message: 'WebDAV连接测试成功!' }
+    } else {
+      webdavTestResult.value = { success: false, message: 'WebDAV连接测试失败' }
+    }
+  } catch (error) {
+    console.error('WebDAV连接测试失败:', error)
+    webdavTestResult.value = { success: false, message: `连接失败: ${error instanceof Error ? error.message : '未知错误'}` }
+  } finally {
+    isWebdavTesting.value = false
+  }
+}
+
+// 上传数据到WebDAV
+async function uploadToWebdav() {
+  isSyncing.value = true
+  syncResult.value = null
+
+  try {
+    await syncService.uploadToWebDAV()
+    syncResult.value = { success: true, message: '数据上传成功!' }
+  } catch (error) {
+    console.error('数据上传失败:', error)
+    syncResult.value = { success: false, message: `上传失败: ${error instanceof Error ? error.message : '未知错误'}` }
+  } finally {
+    isSyncing.value = false
+  }
+}
+
+// 从WebDAV下载数据
+async function downloadFromWebdav() {
+  if (!confirm('下载数据将覆盖当前所有本地数据，确定要继续吗？')) {
+    return
+  }
+
+  isSyncing.value = true
+  syncResult.value = null
+
+  try {
+    await syncService.downloadFromWebDAV()
+    syncResult.value = { success: true, message: '数据下载成功！页面将刷新以应用新数据' }
+    
+    setTimeout(() => {
+      window.location.reload()
+    }, 2000)
+  } catch (error) {
+    console.error('数据下载失败:', error)
+    syncResult.value = { success: false, message: `下载失败: ${error instanceof Error ? error.message : '未知错误'}` }
+  } finally {
+    isSyncing.value = false
+  }
+}
+
+// 监听WebDAV启用状态变化，自动保存
+watch(() => webdavConfig.enabled, (newValue) => {
+  try {
+    saveWebDAVConfig(webdavConfig)
+    console.log('WebDAV启用状态已保存:', newValue)
+  } catch (error) {
+    console.error('自动保存WebDAV状态失败:', error)
+  }
+})
 
 onMounted(() => {
   loadConfig()

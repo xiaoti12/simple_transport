@@ -1,1 +1,2 @@
 - 不需要自动提交git
+- 运行npm run dev时绑定0.0.0.0作为host

@@ -129,6 +129,7 @@ export const useTripsStore = defineStore('trips', () => {
     updateTrip,
     loadFromStorage,
     loadSampleData,
-    clearAllTrips
+    clearAllTrips,
+    saveToStorage
   }
 })

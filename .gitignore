@@ -34,3 +34,4 @@ dist-ssr
 # others
 .ai_material
 tsconfig.tsbuildinfo
+.vscode/mcp-project-config.json

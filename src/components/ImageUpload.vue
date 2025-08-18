@@ -41,8 +41,8 @@
 
     <!-- AI识别按钮 -->
     <button
-      v-if="previewUrl && !isRecognizing"
-      @click="$emit('recognize', selectedFile)"
+      v-if="previewUrl && !isRecognizing && selectedFile"
+      @click="selectedFile && $emit('recognize', selectedFile)"
       class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
     >
       🤖 AI识别票据信息

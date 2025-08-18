@@ -94,9 +94,6 @@ const totalPrice = computed(() => {
   border-bottom: none;
 }
 
-.round-trip-content :deep(.status) {
-  display: none;
-}
 
 .round-trip-connector {
   position: relative;

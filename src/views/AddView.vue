@@ -191,16 +191,6 @@
                 required
               />
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
-              <select
-                v-model="form.status"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              >
-                <option value="unused">未使用</option>
-                <option value="used">已使用</option>
-              </select>
-            </div>
           </div>
 
 
@@ -400,16 +390,6 @@
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   />
                 </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
-                  <select
-                    v-model="recognitionResults[selectedResultIndex].status"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  >
-                    <option value="unused">未使用</option>
-                    <option value="used">已使用</option>
-                  </select>
-                </div>
               </div>
 
               <button
@@ -476,7 +456,6 @@ interface RecognitionResult {
     station: string
   }
   price: number
-  status: 'used' | 'unused'
   airline: string
   flightNumber: string
 }
@@ -522,7 +501,6 @@ const form = reactive<Omit<TripRecord, 'id' | 'createdAt'>>({
     station: ''
   },
   price: 0,
-  status: 'unused',
   airline: '',
   flightNumber: ''
 })
@@ -625,7 +603,6 @@ async function handleImageRecognition(file: File) {
         station: result.arrival?.station || ''
       },
       price: result.price || 0,
-      status: 'unused',
       airline: result.airline || '',
       flightNumber: result.flightNumber || ''
     }))

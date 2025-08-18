@@ -189,7 +189,6 @@ ${JSON.stringify(ticketsSchema, null, 2)}
               station: ticket.arrival?.station || ''
             },
             price: ticket.price || 0,
-            status: 'unused',
             airline: ticket.airline || '',
             flightNumber: ticket.flightNumber || ''
           }

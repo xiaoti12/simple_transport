@@ -17,10 +17,6 @@
               <span class="flight-number">{{ getFlightNumber() }}</span>
             </div>
           </div>
-          <div v-if="!props.isInRoundTrip" class="status" :style="getStatusStyle()">
-            <span>{{ trip.status === 'used' ? '✓' : '+' }}</span> 
-            {{ trip.status === 'used' ? '已使用' : '未使用' }}
-          </div>
         </div>
         <div class="route-info">
           <div class="route-item">
@@ -170,18 +166,6 @@ function getFlightNumber() {
   return 'MU1234'
 }
 
-function getStatusStyle() {
-  if (props.trip.status === 'used') {
-    return { 
-      background: '#e9ecef', 
-      color: '#6c757d' 
-    }
-  }
-  return {
-    background: '#e8f5e8',
-    color: '#28a745'
-  }
-}
 
 function getTerminalInfo(station: string) {
   // 去掉城市名前缀，返回完整的机场/车站名称
@@ -302,15 +286,6 @@ function goToDetail() {
   margin-top: 1px;
 }
 
-.status {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-}
 
 .route-info {
   display: flex;

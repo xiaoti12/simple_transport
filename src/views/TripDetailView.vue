@@ -42,13 +42,6 @@
                   {{ trip.flightNumber || '航班号' }}
                 </div>
               </div>
-              <div class="ml-auto">
-                <div class="status-toggle px-3 py-1 rounded-full text-xs font-medium" 
-                     :class="statusClasses" @click="toggleStatus">
-                  <span>{{ trip.status === 'used' ? '✓' : '+' }}</span> 
-                  {{ trip.status === 'used' ? '已使用' : '未使用' }}
-                </div>
-              </div>
             </div>
             
             <!-- 航线信息 -->
@@ -162,12 +155,6 @@ const hasChanges = ref(false)
 const saving = ref(false)
 const isEditing = ref(false)
 
-const statusClasses = computed(() => {
-  if (!trip.value) return ''
-  return trip.value.status === 'used' 
-    ? 'bg-gray-200 text-gray-700' 
-    : 'bg-green-100 text-green-700'
-})
 
 onMounted(() => {
   const tripId = route.params.id as string
@@ -339,11 +326,6 @@ function updateTripField(field: string, value: string) {
   }
 }
 
-function toggleStatus() {
-  if (!trip.value) return
-  trip.value.status = trip.value.status === 'used' ? 'unused' : 'used'
-  markChanged()
-}
 
 function markChanged() {
   hasChanges.value = true
@@ -457,14 +439,6 @@ function showMoreOptions() {
   background: transparent !important;
 }
 
-.status-toggle {
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.status-toggle:hover {
-  transform: scale(1.05);
-}
 
 .airline-logo {
   width: 32px;

@@ -13,7 +13,6 @@ export interface TripRecord {
     station: string
   }
   price: number
-  status: 'used' | 'unused'
   createdAt: string
   airline?: string // 航空公司或铁路公司
   flightNumber?: string // 航班号或车次号

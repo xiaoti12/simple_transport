@@ -78,7 +78,6 @@ interface TripRecord {
     station: string
   }
   price: number
-  status: 'used' | 'unused'
   createdAt: string
 }
 ```

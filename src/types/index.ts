@@ -17,6 +17,7 @@ export interface TripRecord {
   airline?: string // 航空公司或铁路公司
   flightNumber?: string // 航班号或车次号
   notes?: string // 备注信息
+  travelers: string[] // 出行人列表
 }
 
 export interface AIConfig {
@@ -33,9 +34,14 @@ export interface WebDAVConfig {
   useProxy: boolean
 }
 
+export interface TravelerConfig {
+  availableTravelers: string[] // 可选的出行人列表
+}
+
 export interface SyncData {
   trips: TripRecord[]
   aiConfig: AIConfig | null
+  travelerConfig: TravelerConfig | null
   exportDate: string
   version: string
 }

@@ -190,7 +190,8 @@ ${JSON.stringify(ticketsSchema, null, 2)}
             },
             price: ticket.price || 0,
             airline: ticket.airline || '',
-            flightNumber: ticket.flightNumber || ''
+            flightNumber: ticket.flightNumber || '',
+            travelers: ['我'] // AI录入默认出行人为"我"
           }
 
           return tripRecord

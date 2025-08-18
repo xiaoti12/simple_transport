@@ -108,6 +108,68 @@
             <option value="train">火车</option>
           </select>
         </div>
+
+        <!-- 出行人信息 -->
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+          <div class="text-sm text-gray-600 mb-3">出行人</div>
+          <div v-if="trip.travelers && trip.travelers.length > 0" class="space-y-2">
+            <!-- 当前出行人显示 -->
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span 
+                v-for="traveler in trip.travelers" 
+                :key="traveler"
+                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200"
+              >
+                👤 {{ traveler }}
+              </span>
+            </div>
+            
+            <!-- 编辑出行人按钮 -->
+            <button 
+              @click="showTravelersEditor = !showTravelersEditor"
+              class="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            >
+              {{ showTravelersEditor ? '取消编辑' : '编辑出行人' }}
+            </button>
+
+            <!-- 出行人编辑器 -->
+            <div v-if="showTravelersEditor" class="mt-3 p-3 bg-gray-50 rounded-lg">
+              <div class="text-sm text-gray-600 mb-2">选择出行人：</div>
+              <div class="space-y-2">
+                <div class="flex flex-wrap gap-2">
+                  <label 
+                    v-for="traveler in tripsStore.travelerConfig.availableTravelers" 
+                    :key="traveler"
+                    class="flex items-center cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      v-model="selectedTravelers"
+                      :value="traveler"
+                      @change="updateTravelers"
+                      class="sr-only"
+                    />
+                    <div 
+                      class="px-3 py-2 rounded-lg border-2 text-sm transition-colors"
+                      :class="selectedTravelers.includes(traveler) 
+                        ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300'"
+                    >
+                      <span class="mr-1">{{ selectedTravelers.includes(traveler) ? '✓' : '' }}</span>
+                      {{ traveler }}
+                    </div>
+                  </label>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                  请至少选择一个出行人
+                </p>
+              </div>
+            </div>
+          </div>
+          <div v-else class="text-gray-500 text-sm">
+            未设置出行人信息
+          </div>
+        </div>
         
         <!-- 备注信息 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
@@ -168,6 +230,8 @@ const hasChanges = ref(false)
 const saving = ref(false)
 const isEditing = ref(false)
 const isInitialized = ref(false)
+const showTravelersEditor = ref(false)
+const selectedTravelers = ref<string[]>([])
 
 
 onMounted(() => {
@@ -177,6 +241,16 @@ onMounted(() => {
     if (foundTrip) {
       trip.value = { ...foundTrip }
       notes.value = (foundTrip as any).notes || ''
+      
+      // 初始化出行人选择，兼容旧数据
+      if (foundTrip.travelers && Array.isArray(foundTrip.travelers)) {
+        selectedTravelers.value = [...foundTrip.travelers]
+      } else {
+        // 为旧数据设置默认出行人
+        selectedTravelers.value = ['我']
+        trip.value.travelers = ['我']
+      }
+      
       // 延迟标记为已初始化，避免初始赋值触发 markChanged
       setTimeout(() => {
         isInitialized.value = true
@@ -347,6 +421,21 @@ function updateTripField(field: string, value: string) {
 
 function markChanged() {
   hasChanges.value = true
+}
+
+function updateTravelers() {
+  if (!trip.value) return
+  
+  // 确保至少选择一个出行人
+  let travelers = [...selectedTravelers.value]
+  if (travelers.length === 0) {
+    // 如果没有选择任何人，默认选择"我"
+    travelers = ['我']
+    selectedTravelers.value = travelers
+  }
+  
+  trip.value.travelers = travelers
+  markChanged()
 }
 
 async function saveChanges() {

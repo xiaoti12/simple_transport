@@ -59,7 +59,7 @@ export class WebDAVService {
     }
   }
 
-  async uploadData(trips: TripRecord[], aiConfig: AIConfig | null): Promise<void> {
+  async uploadData(trips: TripRecord[], aiConfig: AIConfig | null, travelerConfig: any = null): Promise<void> {
     if (!this.client) {
       throw new Error('WebDAV客户端未初始化')
     }
@@ -67,6 +67,7 @@ export class WebDAVService {
     const syncData: SyncData = {
       trips,
       aiConfig,
+      travelerConfig,
       exportDate: new Date().toISOString(),
       version: '1.0'
     }

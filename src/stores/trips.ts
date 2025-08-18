@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { TripRecord } from '@/types'
+import type { TripRecord, TravelerConfig } from '@/types'
 
 // 生成唯一ID的函数
 function generateUniqueId(existingIds: Set<string>): string {
@@ -14,6 +14,7 @@ function generateUniqueId(existingIds: Set<string>): string {
 
 export const useTripsStore = defineStore('trips', () => {
   const trips = ref<TripRecord[]>([])
+  const travelerConfig = ref<TravelerConfig>({ availableTravelers: ['我'] })
 
   const sortedTrips = computed(() => {
     return [...trips.value].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -114,7 +115,8 @@ export const useTripsStore = defineStore('trips', () => {
     const newTrip: TripRecord = {
       ...trip,
       id: generateUniqueId(existingIds),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      travelers: trip.travelers && trip.travelers.length > 0 ? trip.travelers : ['我']
     }
     trips.value.push(newTrip)
     saveToStorage()
@@ -152,6 +154,35 @@ export const useTripsStore = defineStore('trips', () => {
 
   function saveToStorage() {
     localStorage.setItem('simple-transport-trips', JSON.stringify(trips.value))
+    localStorage.setItem('simple-transport-traveler-config', JSON.stringify(travelerConfig.value))
+  }
+
+  // 出行人配置管理
+  function addTraveler(name: string) {
+    if (!travelerConfig.value.availableTravelers.includes(name)) {
+      travelerConfig.value.availableTravelers.push(name)
+      saveToStorage()
+    }
+  }
+
+  function removeTraveler(name: string) {
+    // 不能删除"我"
+    if (name === '我') return
+    
+    const index = travelerConfig.value.availableTravelers.indexOf(name)
+    if (index > -1) {
+      travelerConfig.value.availableTravelers.splice(index, 1)
+      saveToStorage()
+    }
+  }
+
+  function updateTravelerList(travelers: string[]) {
+    // 确保"我"始终在列表中
+    if (!travelers.includes('我')) {
+      travelers.unshift('我')
+    }
+    travelerConfig.value.availableTravelers = travelers
+    saveToStorage()
   }
 
   // 修复重复ID的函数
@@ -185,9 +216,27 @@ export const useTripsStore = defineStore('trips', () => {
       trips.value = JSON.parse(stored)
       // 加载后检查并修复重复ID
       fixDuplicateIds()
+      // 兼容旧数据：为没有travelers字段的旅行记录添加默认值
+      trips.value.forEach(trip => {
+        if (!trip.travelers) {
+          trip.travelers = ['我']
+        }
+      })
+      saveToStorage()
     } else {
       // 如果没有存储数据，自动加载示例数据
       loadSampleData()
+    }
+
+    // 加载出行人配置
+    const storedTravelerConfig = localStorage.getItem('simple-transport-traveler-config')
+    if (storedTravelerConfig) {
+      travelerConfig.value = JSON.parse(storedTravelerConfig)
+      // 确保"我"在列表中
+      if (!travelerConfig.value.availableTravelers.includes('我')) {
+        travelerConfig.value.availableTravelers.unshift('我')
+        saveToStorage()
+      }
     }
   }
 
@@ -211,10 +260,14 @@ export const useTripsStore = defineStore('trips', () => {
     roundTrips,
     singleTrips,
     sortedAllTrips,
+    travelerConfig,
     addTrip,
     deleteTrip,
     getTripById,
     updateTrip,
+    addTraveler,
+    removeTraveler,
+    updateTravelerList,
     loadFromStorage,
     loadSampleData,
     clearAllTrips,

@@ -18,7 +18,8 @@ export const sampleTrips: TripRecord[] = [
     price: 1280,
     createdAt: '2025-07-25T10:00:00Z',
     airline: '中国南方航空',
-    flightNumber: 'CZ3114'
+    flightNumber: 'CZ3114',
+    travelers: ['我']
   },
   {
     id: '2',
@@ -37,7 +38,8 @@ export const sampleTrips: TripRecord[] = [
     price: 956,
     createdAt: '2025-07-23T15:30:00Z',
     airline: '中国国际航空',
-    flightNumber: 'CA1405'
+    flightNumber: 'CA1405',
+    travelers: ['我']
   },
   {
     id: '3',
@@ -56,7 +58,8 @@ export const sampleTrips: TripRecord[] = [
     price: 780,
     createdAt: '2025-07-11T09:15:00Z',
     airline: '中国东方航空',
-    flightNumber: 'MU5138'
+    flightNumber: 'MU5138',
+    travelers: ['我']
   },
   {
     id: '4',
@@ -75,7 +78,8 @@ export const sampleTrips: TripRecord[] = [
     price: 1150,
     createdAt: '2025-05-18T14:20:00Z',
     airline: '海南航空',
-    flightNumber: 'HU7148'
+    flightNumber: 'HU7148',
+    travelers: ['我']
   },
   {
     id: '5',
@@ -94,7 +98,8 @@ export const sampleTrips: TripRecord[] = [
     price: 890,
     createdAt: '2025-05-01T16:45:00Z',
     airline: '春秋航空',
-    flightNumber: '9C8813'
+    flightNumber: '9C8813',
+    travelers: ['我']
   },
   {
     id: '6',
@@ -113,7 +118,8 @@ export const sampleTrips: TripRecord[] = [
     price: 553,
     createdAt: '2025-06-13T11:20:00Z',
     airline: '中国国家铁路',
-    flightNumber: 'G101'
+    flightNumber: 'G101',
+    travelers: ['我']
   },
   {
     id: '7',
@@ -132,6 +138,7 @@ export const sampleTrips: TripRecord[] = [
     price: 553,
     createdAt: '2025-06-16T14:30:00Z',
     airline: '中国国家铁路',
-    flightNumber: 'G150'
+    flightNumber: 'G150',
+    travelers: ['我']
   }
 ]

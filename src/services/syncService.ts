@@ -20,7 +20,7 @@ export class SyncService {
     console.log('开始上传数据到WebDAV...')
     
     try {
-      await webdavService.uploadData(tripsStore.trips, aiConfig)
+      await webdavService.uploadData(tripsStore.trips, aiConfig, tripsStore.travelerConfig)
       console.log('数据上传成功')
     } catch (error) {
       console.error('上传失败:', error)
@@ -59,6 +59,11 @@ export class SyncService {
     if (syncData.aiConfig) {
       localStorage.setItem('ai_config', JSON.stringify(syncData.aiConfig))
       console.log('已恢复AI配置')
+    }
+
+    if (syncData.travelerConfig) {
+      tripsStore.travelerConfig = syncData.travelerConfig
+      console.log('已恢复出行人配置')
     }
   }
 

@@ -193,6 +193,39 @@
             </div>
           </div>
 
+          <!-- 出行人选择 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">出行人</label>
+            <div class="space-y-2">
+              <div class="flex flex-wrap gap-2">
+                <label 
+                  v-for="traveler in tripsStore.travelerConfig.availableTravelers" 
+                  :key="traveler"
+                  class="flex items-center cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    v-model="selectedTravelers"
+                    :value="traveler"
+                    class="sr-only"
+                  />
+                  <div 
+                    class="px-3 py-2 rounded-lg border-2 text-sm transition-colors"
+                    :class="selectedTravelers.includes(traveler) 
+                      ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300'"
+                  >
+                    <span class="mr-1">{{ selectedTravelers.includes(traveler) ? '✓' : '' }}</span>
+                    {{ traveler }}
+                  </div>
+                </label>
+              </div>
+              <p class="text-xs text-gray-500">
+                请至少选择一个出行人
+              </p>
+            </div>
+          </div>
+
 
           <button
             type="submit"
@@ -392,6 +425,39 @@
                 </div>
               </div>
 
+              <!-- AI识别的出行人选择 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">出行人</label>
+                <div class="space-y-2">
+                  <div class="flex flex-wrap gap-2">
+                    <label 
+                      v-for="traveler in tripsStore.travelerConfig.availableTravelers" 
+                      :key="traveler"
+                      class="flex items-center cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        v-model="aiSelectedTravelers"
+                        :value="traveler"
+                        class="sr-only"
+                      />
+                      <div 
+                        class="px-3 py-2 rounded-lg border-2 text-sm transition-colors"
+                        :class="aiSelectedTravelers.includes(traveler) 
+                          ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300'"
+                      >
+                        <span class="mr-1">{{ aiSelectedTravelers.includes(traveler) ? '✓' : '' }}</span>
+                        {{ traveler }}
+                      </div>
+                    </label>
+                  </div>
+                  <p class="text-xs text-gray-500">
+                    请至少选择一个出行人
+                  </p>
+                </div>
+              </div>
+
               <button
                 type="submit"
                 class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
@@ -502,8 +568,13 @@ const form = reactive<Omit<TripRecord, 'id' | 'createdAt'>>({
   },
   price: 0,
   airline: '',
-  flightNumber: ''
+  flightNumber: '',
+  travelers: ['我']
 })
+
+// 出行人选择状态
+const selectedTravelers = ref<string[]>(['我'])
+const aiSelectedTravelers = ref<string[]>(['我'])
 
 // 城市输入相关状态
 const showDepartureCityList = ref(false)
@@ -562,6 +633,11 @@ function handleSubmit() {
   if (form.departure.time) {
     form.date = form.departure.time.split('T')[0]
   }
+  
+  // 确保至少选择一个出行人
+  const travelers = selectedTravelers.value.length > 0 ? selectedTravelers.value : ['我']
+  
+  form.travelers = travelers
   
   tripsStore.addTrip(form)
   router.push('/')
@@ -645,7 +721,15 @@ function handleAISubmit() {
     currentResult.date = currentResult.departure.time.split('T')[0]
   }
   
-  tripsStore.addTrip(currentResult as Omit<TripRecord, 'id' | 'createdAt'>)
+  // 确保至少选择一个出行人
+  const travelers = aiSelectedTravelers.value.length > 0 ? aiSelectedTravelers.value : ['我']
+  
+  const tripData = {
+    ...currentResult,
+    travelers
+  } as Omit<TripRecord, 'id' | 'createdAt'>
+  
+  tripsStore.addTrip(tripData)
   
   // 移除已保存的记录
   recognitionResults.value.splice(selectedResultIndex.value, 1)
@@ -666,7 +750,16 @@ function saveAllResults() {
     if (result.departure?.time) {
       result.date = result.departure.time.split('T')[0]
     }
-    tripsStore.addTrip(result as Omit<TripRecord, 'id' | 'createdAt'>)
+    
+    // 确保至少选择一个出行人
+    const travelers = aiSelectedTravelers.value.length > 0 ? aiSelectedTravelers.value : ['我']
+    
+    const tripData = {
+      ...result,
+      travelers
+    } as Omit<TripRecord, 'id' | 'createdAt'>
+    
+    tripsStore.addTrip(tripData)
   })
   
   router.push('/')

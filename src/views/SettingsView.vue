@@ -240,6 +240,60 @@
         </div>
       </div>
 
+      <!-- 出行人配置 -->
+      <div class="bg-white rounded-lg p-4 mb-6 shadow-sm">
+        <h2 class="text-lg font-medium mb-4 flex items-center">
+          👥 出行人配置
+        </h2>
+
+        <div class="space-y-4">
+          <!-- 当前出行人列表 -->
+          <div>
+            <h3 class="font-medium mb-2">出行人列表</h3>
+            <div class="flex flex-wrap gap-2">
+              <div 
+                v-for="traveler in tripsStore.travelerConfig.availableTravelers" 
+                :key="traveler"
+                class="flex items-center bg-blue-50 border border-blue-200 rounded-lg px-3 py-2"
+              >
+                <span class="text-sm">{{ traveler }}</span>
+                <button 
+                  v-if="traveler !== '我'" 
+                  @click="removeTraveler(traveler)"
+                  class="ml-2 text-red-500 hover:text-red-700"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">
+              "我" 是默认出行人，无法删除
+            </p>
+          </div>
+
+          <!-- 添加新出行人 -->
+          <div>
+            <h3 class="font-medium mb-2">添加新出行人</h3>
+            <div class="flex gap-2">
+              <input 
+                v-model="newTravelerName" 
+                type="text" 
+                placeholder="请输入出行人姓名"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                @keyup.enter="addNewTraveler"
+              />
+              <button 
+                @click="addNewTraveler"
+                :disabled="!newTravelerName.trim()"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+              >
+                添加
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 其他设置 -->
       <div class="bg-white rounded-lg p-4 shadow-sm">
         <h2 class="text-lg font-medium mb-4 flex items-center">
@@ -289,6 +343,7 @@ const tripsStore = useTripsStore()
 const syncService = createSyncService()
 
 const showToken = ref(false)
+const newTravelerName = ref('')
 const showWebdavPassword = ref(false)
 const isTesting = ref(false)
 const isWebdavTesting = ref(false)
@@ -492,6 +547,29 @@ async function downloadFromWebdav() {
     syncResult.value = { success: false, message: `下载失败: ${error instanceof Error ? error.message : '未知错误'}` }
   } finally {
     isSyncing.value = false
+  }
+}
+
+// 添加新出行人
+function addNewTraveler() {
+  const name = newTravelerName.value.trim()
+  if (!name) return
+
+  if (tripsStore.travelerConfig.availableTravelers.includes(name)) {
+    alert('该出行人已存在')
+    return
+  }
+
+  tripsStore.addTraveler(name)
+  newTravelerName.value = ''
+}
+
+// 删除出行人
+function removeTraveler(name: string) {
+  if (name === '我') return
+  
+  if (confirm(`确定要删除出行人"${name}"吗？`)) {
+    tripsStore.removeTraveler(name)
   }
 }
 

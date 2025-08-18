@@ -83,11 +83,25 @@ export const useTripsStore = defineStore('trips', () => {
     }
   }
 
-  function updateTrip(id: string, updates: Partial<TripRecord>) {
-    const trip = trips.value.find(t => t.id === id)
-    if (trip) {
-      Object.assign(trip, updates)
-      saveToStorage()
+  function getTripById(id: string): TripRecord | undefined {
+    return trips.value.find(trip => trip.id === id)
+  }
+
+  function updateTrip(tripOrId: TripRecord | string, updates?: Partial<TripRecord>) {
+    if (typeof tripOrId === 'string') {
+      // 旧的调用方式：updateTrip(id, updates)
+      const trip = trips.value.find(t => t.id === tripOrId)
+      if (trip && updates) {
+        Object.assign(trip, updates)
+        saveToStorage()
+      }
+    } else {
+      // 新的调用方式：updateTrip(trip)
+      const trip = trips.value.find(t => t.id === tripOrId.id)
+      if (trip) {
+        Object.assign(trip, tripOrId)
+        saveToStorage()
+      }
     }
   }
 
@@ -126,6 +140,7 @@ export const useTripsStore = defineStore('trips', () => {
     singleTrips,
     addTrip,
     deleteTrip,
+    getTripById,
     updateTrip,
     loadFromStorage,
     loadSampleData,

@@ -1,5 +1,5 @@
 <template>
-  <div class="trip-card">
+  <div class="trip-card" @click="goToDetail">
     <div class="date-section">
       <div class="date-info">
         <div class="date">{{ formatDateShort(trip.date) }}</div>
@@ -51,7 +51,7 @@
         
         <!-- 删除按钮 -->
         <button 
-          @click="$emit('delete', trip.id)"
+          @click.stop="$emit('delete', trip.id)"
           class="delete-btn"
           title="删除记录"
         >
@@ -63,7 +63,10 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import type { TripRecord } from '@/types'
+
+const router = useRouter()
 
 const props = defineProps<{
   trip: TripRecord
@@ -193,6 +196,10 @@ function getTerminalInfo(station: string) {
   }
   
   return cleanStation || ''
+}
+
+function goToDetail() {
+  router.push(`/trip/${props.trip.id}`)
 }
 </script>
 

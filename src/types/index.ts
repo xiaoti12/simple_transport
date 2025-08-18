@@ -17,6 +17,7 @@ export interface TripRecord {
   createdAt: string
   airline?: string // 航空公司或铁路公司
   flightNumber?: string // 航班号或车次号
+  notes?: string // 备注信息
 }
 
 export interface AIConfig {

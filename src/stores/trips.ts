@@ -2,6 +2,16 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { TripRecord } from '@/types'
 
+// 生成唯一ID的函数
+function generateUniqueId(existingIds: Set<string>): string {
+  let id: string
+  do {
+    // 使用时间戳 + 随机数确保唯一性
+    id = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  } while (existingIds.has(id))
+  return id
+}
+
 export const useTripsStore = defineStore('trips', () => {
   const trips = ref<TripRecord[]>([])
 
@@ -66,9 +76,10 @@ export const useTripsStore = defineStore('trips', () => {
   })
 
   function addTrip(trip: Omit<TripRecord, 'id' | 'createdAt'>) {
+    const existingIds = new Set(trips.value.map(t => t.id))
     const newTrip: TripRecord = {
       ...trip,
-      id: Date.now().toString(),
+      id: generateUniqueId(existingIds),
       createdAt: new Date().toISOString()
     }
     trips.value.push(newTrip)
@@ -109,10 +120,37 @@ export const useTripsStore = defineStore('trips', () => {
     localStorage.setItem('simple-transport-trips', JSON.stringify(trips.value))
   }
 
+  // 修复重复ID的函数
+  function fixDuplicateIds() {
+    const seenIds = new Set<string>()
+    const existingIds = new Set(trips.value.map(t => t.id))
+    let hasChanges = false
+
+    trips.value.forEach(trip => {
+      if (seenIds.has(trip.id)) {
+        // 发现重复ID，生成新的唯一ID
+        const newId = generateUniqueId(existingIds)
+        existingIds.add(newId)
+        trip.id = newId
+        hasChanges = true
+        console.warn(`修复重复ID: 为行程生成新ID ${newId}`)
+      } else {
+        seenIds.add(trip.id)
+      }
+    })
+
+    if (hasChanges) {
+      saveToStorage()
+      console.log('已修复数据中的重复ID问题')
+    }
+  }
+
   function loadFromStorage() {
     const stored = localStorage.getItem('simple-transport-trips')
     if (stored) {
       trips.value = JSON.parse(stored)
+      // 加载后检查并修复重复ID
+      fixDuplicateIds()
     } else {
       // 如果没有存储数据，自动加载示例数据
       loadSampleData()
@@ -145,6 +183,7 @@ export const useTripsStore = defineStore('trips', () => {
     loadFromStorage,
     loadSampleData,
     clearAllTrips,
-    saveToStorage
+    saveToStorage,
+    fixDuplicateIds
   }
 })

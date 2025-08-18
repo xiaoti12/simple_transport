@@ -218,6 +218,130 @@ ${JSON.stringify(ticketsSchema, null, 2)}
     return tickets[0] || {}
   }
 
+  // 从文字内容识别票据信息（支持多张票）
+  async recognizeTicketsFromText(textContent: string): Promise<Partial<TripRecord>[]> {
+    console.log('🤖 AI文字识别开始:', {
+      configUrl: this.config.baseUrl,
+      model: this.config.model,
+      textLength: textContent.length
+    })
+
+    try {
+      const messages = [
+        {
+          role: "system",
+          content: `你是一个专业的票据信息识别助手。请分析用户提供的文字内容，提取火车票或飞机票的关键信息。文字中可能包含一张或多张票据的信息。
+
+请严格按照以下JSON Schema格式返回：
+${JSON.stringify(ticketsSchema, null, 2)}
+
+注意事项：
+1. 时间格式必须是 YYYY-MM-DDTHH:mm，如果无法识别时间则填空字符串""
+2. 城市名称要标准化（如"北京"而不是"北京市"）
+3. 价格转换为数字，单位为人民币元，无法识别时填0
+4. 如果是火车票，type为"train"；飞机票为"flight"
+5. 航站楼、机场、价格等信息如果文字中没有或无法识别，可以填空字符串或0
+6. 如果文字中有多张票的信息，请都识别出来放在tickets数组中
+7. 只返回JSON数据，不要其他解释文字
+8. 请仔细分析文字中的时间、地点、价格等信息，尽可能准确提取`
+        },
+        {
+          role: "user",
+          content: `请识别以下文字中的票据信息，可能有多张票：
+
+${textContent}`
+        }
+      ]
+
+      console.log('🚀 发送API请求:', {
+        url: `${this.config.baseUrl}/chat/completions`,
+        model: this.config.model
+      })
+
+      const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: this.config.model,
+          messages,
+          max_tokens: 2000,
+          temperature: 0.1,
+          response_format: {
+            type: "json_object"
+          }
+        })
+      })
+
+      console.log('📡 API响应状态:', response.status, response.statusText)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ API请求失败:', errorText)
+        throw new Error(`API请求失败: ${response.status} ${response.statusText}\n${errorText}`)
+      }
+
+      const result = await response.json()
+      console.log('📄 API原始响应:', JSON.stringify(result, null, 2))
+
+      if (!result.choices || !result.choices[0]?.message?.content) {
+        throw new Error('API响应格式错误：缺少content内容')
+      }
+
+      const content = result.choices[0].message.content
+      console.log('🎯 AI识别内容:', content)
+
+      try {
+        const ticketsData = JSON.parse(content)
+        console.log('✅ JSON解析成功:', JSON.stringify(ticketsData, null, 2))
+
+        if (!ticketsData.tickets || !Array.isArray(ticketsData.tickets)) {
+          throw new Error('返回数据格式错误：缺少tickets数组')
+        }
+
+        // 转换为TripRecord格式数组
+        const tripRecords: Partial<TripRecord>[] = ticketsData.tickets.map((ticket: any, index: number) => {
+          console.log(`🎫 处理第${index + 1}张票据:`, ticket)
+
+          const tripRecord: Partial<TripRecord> = {
+            type: ticket.type || 'train',
+            date: ticket.departure?.time ? ticket.departure.time.split('T')[0] : new Date().toISOString().split('T')[0],
+            departure: {
+              time: ticket.departure?.time || '',
+              city: ticket.departure?.city || '',
+              station: ticket.departure?.station || ''
+            },
+            arrival: {
+              time: ticket.arrival?.time || '',
+              city: ticket.arrival?.city || '',
+              station: ticket.arrival?.station || ''
+            },
+            price: ticket.price || 0,
+            airline: ticket.airline || '',
+            flightNumber: ticket.flightNumber || '',
+            travelers: ['我'] // AI录入默认出行人为"我"
+          }
+
+          return tripRecord
+        })
+
+        console.log(`🎉 最终识别结果 (${tripRecords.length}张票):`, JSON.stringify(tripRecords, null, 2))
+        return tripRecords
+
+      } catch (parseError) {
+        console.error('❌ JSON解析失败:', parseError)
+        console.log('📝 原始内容:', content)
+        throw new Error(`AI返回的JSON格式无效: ${parseError instanceof Error ? parseError.message : '未知错误'}`)
+      }
+
+    } catch (error) {
+      console.error('💥 AI文字识别服务错误:', error)
+      throw error
+    }
+  }
+
   // 测试API连接
   async testConnection(): Promise<boolean> {
     try {

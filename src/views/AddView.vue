@@ -12,22 +12,30 @@
       <!-- 添加方式选择 -->
       <div class="bg-white rounded-lg p-4 mb-6 shadow-sm">
         <h2 class="text-lg font-medium mb-4">选择添加方式</h2>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-2">
           <button 
             @click="mode = 'manual'"
-            class="flex flex-col items-center p-4 rounded-lg border-2"
+            class="flex flex-col items-center p-3 rounded-lg border-2"
             :class="mode === 'manual' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'"
           >
-            <div class="text-2xl mb-2">✏️</div>
-            <span class="text-sm">手动录入</span>
+            <div class="text-xl mb-1">✏️</div>
+            <span class="text-xs">手动录入</span>
           </button>
           <button 
             @click="mode = 'ai'"
-            class="flex flex-col items-center p-4 rounded-lg border-2"
+            class="flex flex-col items-center p-3 rounded-lg border-2"
             :class="mode === 'ai' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'"
           >
-            <div class="text-2xl mb-2">🤖</div>
-            <span class="text-sm">AI识别</span>
+            <div class="text-xl mb-1">📸</div>
+            <span class="text-xs">图片识别</span>
+          </button>
+          <button 
+            @click="mode = 'text'"
+            class="flex flex-col items-center p-3 rounded-lg border-2"
+            :class="mode === 'text' ? 'border-green-500 bg-green-50' : 'border-gray-200'"
+          >
+            <div class="text-xl mb-1">📝</div>
+            <span class="text-xs">文字识别</span>
           </button>
         </div>
       </div>
@@ -259,7 +267,7 @@
         </div>
 
         <div v-else>
-          <h2 class="text-lg font-medium mb-4">🤖 AI票据识别</h2>
+          <h2 class="text-lg font-medium mb-4">📸 AI图片识别</h2>
           
           <!-- 图片上传组件 -->
           <ImageUpload 
@@ -483,6 +491,255 @@
           </div>
         </div>
       </div>
+
+      <!-- 文字识别 -->
+      <div v-else-if="mode === 'text'" class="bg-white rounded-lg p-4 shadow-sm">
+        <div v-if="!hasAIConfig" class="text-center">
+          <div class="text-4xl mb-4">⚙️</div>
+          <h3 class="text-lg font-medium mb-2">需要配置AI服务</h3>
+          <p class="text-gray-500 mb-4">请先在设置中配置AI API信息</p>
+          <div class="space-y-2">
+            <button 
+              @click="$router.push('/settings')"
+              class="w-full bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
+            >
+              去设置 →
+            </button>
+            <button 
+              @click="mode = 'manual'"
+              class="w-full text-green-600 font-medium"
+            >
+              先使用手动录入
+            </button>
+          </div>
+        </div>
+
+        <div v-else>
+          <h2 class="text-lg font-medium mb-4">📝 AI文字识别</h2>
+          
+          <!-- 文字识别组件 -->
+          <TextRecognition 
+            :is-recognizing="isRecognizing"
+            @recognize="handleTextRecognition"
+            ref="textRecognitionRef"
+          />
+
+          <!-- 识别结果 (复用图片识别的结果展示逻辑) -->
+          <div v-if="recognitionResults.length > 0" class="mt-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-medium text-green-600">
+                ✅ 识别完成 ({{recognitionResults.length}}条记录)
+              </h3>
+              <button
+                @click="clearRecognitionResult"
+                class="text-sm text-gray-500 hover:text-gray-700"
+              >
+                重新识别
+              </button>
+            </div>
+
+            <!-- 多条记录选择器 -->
+            <div v-if="recognitionResults.length > 1" class="mb-4">
+              <div class="flex items-center space-x-2 mb-2">
+                <span class="text-sm font-medium text-gray-700">选择记录：</span>
+                <div class="flex space-x-1">
+                  <button
+                    v-for="(result, index) in recognitionResults"
+                    :key="index"
+                    @click="selectedResultIndex = index"
+                    class="px-3 py-1 text-xs rounded-full border"
+                    :class="selectedResultIndex === index 
+                      ? 'bg-green-500 text-white border-green-500' 
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-green-300'"
+                  >
+                    第{{index + 1}}条
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 批量操作 -->
+              <div class="flex space-x-2 mb-4">
+                <button
+                  @click="saveAllResults"
+                  class="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+                >
+                  保存全部 ({{recognitionResults.length}}条)
+                </button>
+              </div>
+            </div>
+
+            <!-- 识别结果表单 (复用AI图片识别的表单) -->
+            <form @submit.prevent="handleAISubmit" class="space-y-4">
+              <!-- 交通方式 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">交通方式</label>
+                <div class="grid grid-cols-2 gap-3">
+                  <button 
+                    type="button"
+                    @click="recognitionResults[selectedResultIndex].type = 'train'"
+                    class="flex items-center justify-center p-3 rounded-lg border-2"
+                    :class="recognitionResults[selectedResultIndex].type === 'train' ? 'border-green-500 bg-green-50' : 'border-gray-200'"
+                  >
+                    🚄 火车
+                  </button>
+                  <button 
+                    type="button"
+                    @click="recognitionResults[selectedResultIndex].type = 'flight'"
+                    class="flex items-center justify-center p-3 rounded-lg border-2"
+                    :class="recognitionResults[selectedResultIndex].type === 'flight' ? 'border-green-500 bg-green-50' : 'border-gray-200'"
+                  >
+                    ✈️ 飞机
+                  </button>
+                </div>
+              </div>
+
+              <!-- 出发信息 -->
+              <div class="border rounded-lg p-4">
+                <h3 class="font-medium mb-3 text-green-600">🚀 出发</h3>
+                <div class="space-y-3">
+                  <div class="grid grid-cols-2 gap-3">
+                    <input
+                      v-model="recognitionResults[selectedResultIndex].departure.city"
+                      placeholder="出发城市"
+                      class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                      required
+                    />
+                    <input
+                      v-model="recognitionResults[selectedResultIndex].departure.time"
+                      type="datetime-local"
+                      class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                      required
+                    />
+                  </div>
+                  <input
+                    v-model="recognitionResults[selectedResultIndex].departure.station"
+                    :placeholder="recognitionResults[selectedResultIndex].type === 'flight' ? '出发机场' : '出发车站'"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                  />
+                </div>
+              </div>
+
+              <!-- 到达信息 -->
+              <div class="border rounded-lg p-4">
+                <h3 class="font-medium mb-3 text-red-600">🏁 到达</h3>
+                <div class="space-y-3">
+                  <div class="grid grid-cols-2 gap-3">
+                    <input
+                      v-model="recognitionResults[selectedResultIndex].arrival.city"
+                      placeholder="到达城市"
+                      class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                      required
+                    />
+                    <input
+                      v-model="recognitionResults[selectedResultIndex].arrival.time"
+                      type="datetime-local"
+                      class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                      required
+                    />
+                  </div>
+                  <input
+                    v-model="recognitionResults[selectedResultIndex].arrival.station"
+                    :placeholder="recognitionResults[selectedResultIndex].type === 'flight' ? '到达机场' : '到达车站'"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                  />
+                </div>
+              </div>
+
+              <!-- 其他信息 -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ recognitionResults[selectedResultIndex].type === 'flight' ? '航空公司' : '铁路公司' }}
+                  </label>
+                  <input
+                    v-model="recognitionResults[selectedResultIndex].airline"
+                    :placeholder="recognitionResults[selectedResultIndex].type === 'flight' ? '中国东方航空' : '中国国家铁路'"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ recognitionResults[selectedResultIndex].type === 'flight' ? '航班号' : '车次号' }}
+                  </label>
+                  <input
+                    v-model="recognitionResults[selectedResultIndex].flightNumber"
+                    :placeholder="recognitionResults[selectedResultIndex].type === 'flight' ? 'MU5138' : 'G1234'"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">价格 (元)</label>
+                  <input
+                    v-model.number="recognitionResults[selectedResultIndex].price"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                  />
+                </div>
+              </div>
+
+              <!-- AI识别的出行人选择 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">出行人</label>
+                <div class="space-y-2">
+                  <div class="flex flex-wrap gap-2">
+                    <label 
+                      v-for="traveler in tripsStore.travelerConfig.availableTravelers" 
+                      :key="traveler"
+                      class="flex items-center cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        v-model="aiSelectedTravelers"
+                        :value="traveler"
+                        class="sr-only"
+                      />
+                      <div 
+                        class="px-3 py-2 rounded-lg border-2 text-sm transition-colors"
+                        :class="aiSelectedTravelers.includes(traveler) 
+                          ? 'border-green-500 bg-green-50 text-green-700' 
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-green-300'"
+                      >
+                        <span class="mr-1">{{ aiSelectedTravelers.includes(traveler) ? '✓' : '' }}</span>
+                        {{ traveler }}
+                      </div>
+                    </label>
+                  </div>
+                  <p class="text-xs text-gray-500">
+                    请至少选择一个出行人
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                class="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+              >
+                保存当前记录 
+                <span v-if="recognitionResults.length > 1">({{selectedResultIndex + 1}}/{{recognitionResults.length}})</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- 错误提示 -->
+          <div v-if="recognitionError" class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex items-center">
+              <span class="mr-2">❌</span>
+              <span class="text-sm text-red-800">{{ recognitionError }}</span>
+            </div>
+            <button
+              @click="recognitionError = ''"
+              class="mt-2 text-sm text-red-600 hover:text-red-800"
+            >
+              重试
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <BottomNavigation />
@@ -495,13 +752,14 @@ import { useRouter } from 'vue-router'
 import { useTripsStore } from '@/stores/trips'
 import BottomNavigation from '@/components/BottomNavigation.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
+import TextRecognition from '@/components/TextRecognition.vue'
 import { createAIService, getAIConfig } from '@/services/aiService'
 import type { TripRecord } from '@/types'
 
 const router = useRouter()
 const tripsStore = useTripsStore()
 
-const mode = ref<'manual' | 'ai'>('manual')
+const mode = ref<'manual' | 'ai' | 'text'>('manual')
 
 // AI识别相关状态
 const hasAIConfig = ref(false)
@@ -529,6 +787,7 @@ interface RecognitionResult {
 const recognitionResults = ref<RecognitionResult[]>([])
 const selectedResultIndex = ref(0)
 const recognitionError = ref('')
+const textRecognitionRef = ref()
 
 // 常用城市列表
 const commonCities = [
@@ -765,11 +1024,65 @@ function saveAllResults() {
   router.push('/')
 }
 
+// 文字识别处理函数
+async function handleTextRecognition(textContent: string) {
+  console.log('📝 开始处理文字内容:', textContent.length, '字符')
+  
+  isRecognizing.value = true
+  recognitionError.value = ''
+  
+  try {
+    const aiService = createAIService()
+    if (!aiService) {
+      throw new Error('AI服务配置无效')
+    }
+
+    // 调用AI文字识别
+    const results = await aiService.recognizeTicketsFromText(textContent)
+    console.log('🎯 AI文字识别结果:', results)
+
+    // 转换为UI需要的格式
+    recognitionResults.value = results.map((result) => ({
+      type: result.type || 'train',
+      date: result.departure?.time ? result.departure.time.split('T')[0] : new Date().toISOString().split('T')[0],
+      departure: {
+        time: result.departure?.time || '',
+        city: result.departure?.city || '',
+        station: result.departure?.station || ''
+      },
+      arrival: {
+        time: result.arrival?.time || '',
+        city: result.arrival?.city || '',
+        station: result.arrival?.station || ''
+      },
+      price: result.price || 0,
+      airline: result.airline || '',
+      flightNumber: result.flightNumber || ''
+    }))
+
+    // 默认选择第一条
+    selectedResultIndex.value = 0
+    
+    console.log(`✅ 文字识别完成，共${recognitionResults.value.length}条记录`)
+
+  } catch (error) {
+    console.error('❌ AI文字识别失败:', error)
+    recognitionError.value = error instanceof Error ? error.message : '识别失败，请重试'
+  } finally {
+    isRecognizing.value = false
+  }
+}
+
 // 清空识别结果
 function clearRecognitionResult() {
   recognitionResults.value = []
   selectedResultIndex.value = 0
   recognitionError.value = ''
+  
+  // 如果是文字识别模式，清空文字输入
+  if (mode.value === 'text') {
+    textRecognitionRef.value?.clearText()
+  }
 }
 
 // 检查AI配置

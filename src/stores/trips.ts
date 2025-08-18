@@ -79,6 +79,36 @@ export const useTripsStore = defineStore('trips', () => {
     return trips.value.filter((_, index) => !usedIndexes.has(index))
   })
 
+  // 统一排序的行程列表（往返行程和单程行程按时间倒序混合）
+  const sortedAllTrips = computed(() => {
+    const allItems: Array<{
+      type: 'round' | 'single'
+      data: any
+      sortDate: Date
+    }> = []
+    
+    // 添加往返行程（使用出发时间作为排序依据）
+    roundTrips.value.roundTrips.forEach(roundTrip => {
+      allItems.push({
+        type: 'round',
+        data: roundTrip,
+        sortDate: new Date(roundTrip.outbound.date)
+      })
+    })
+    
+    // 添加单程行程
+    singleTrips.value.forEach(trip => {
+      allItems.push({
+        type: 'single',
+        data: trip,
+        sortDate: new Date(trip.date)
+      })
+    })
+    
+    // 按时间倒序排序（最新的在前面）
+    return allItems.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime())
+  })
+
   function addTrip(trip: Omit<TripRecord, 'id' | 'createdAt'>) {
     const existingIds = new Set(trips.value.map(t => t.id))
     const newTrip: TripRecord = {
@@ -180,6 +210,7 @@ export const useTripsStore = defineStore('trips', () => {
     tripsByType,
     roundTrips,
     singleTrips,
+    sortedAllTrips,
     addTrip,
     deleteTrip,
     getTripById,

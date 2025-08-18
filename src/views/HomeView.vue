@@ -22,20 +22,21 @@
 
       <!-- 出行记录列表 -->
       <div class="space-y-3">
-        <!-- 往返行程 -->
-        <RoundTripCard
-          v-for="(roundTrip, index) in tripsStore.roundTrips.roundTrips"
-          :key="`round-${index}`"
-          :outbound="roundTrip.outbound"
-          :return-trip="roundTrip.return"
-        />
-        
-        <!-- 单程行程 -->
-        <TripCard 
-          v-for="trip in tripsStore.singleTrips" 
-          :key="trip.id" 
-          :trip="trip"
-        />
+        <!-- 按时间倒序显示往返行程和单程行程 -->
+        <template v-for="item in tripsStore.sortedAllTrips" :key="item.type === 'round' ? `round-${item.data.outbound.id}` : item.data.id">
+          <!-- 往返行程 -->
+          <RoundTripCard
+            v-if="item.type === 'round'"
+            :outbound="item.data.outbound"
+            :return-trip="item.data.return"
+          />
+          
+          <!-- 单程行程 -->
+          <TripCard 
+            v-else
+            :trip="item.data"
+          />
+        </template>
         
         <div v-if="tripsStore.trips.length === 0" class="text-center py-12">
           <div class="text-gray-400 text-lg mb-2">📱</div>

@@ -124,6 +124,19 @@
             {{ formatDateTime(trip.createdAt) }}
           </div>
         </div>
+        
+        <!-- 危险操作区域 -->
+        <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 border-red-400">
+          <div class="text-sm text-gray-600 mb-3">危险操作</div>
+          <button 
+            @click="confirmDeleteTrip" 
+            class="delete-trip-btn"
+            title="删除这条出行记录"
+          >
+            🗑️ 删除出行记录
+          </button>
+          <div class="text-xs text-gray-500 mt-2">删除后无法恢复，请谨慎操作</div>
+        </div>
       </div>
     </div>
 
@@ -365,11 +378,21 @@ function goBack() {
   }
 }
 
+function confirmDeleteTrip() {
+  if (!trip.value) return
+  
+  const confirmed = confirm(`确定要删除这条出行记录吗？\n\n出发: ${trip.value.departure.city} → ${trip.value.arrival.city}\n日期: ${trip.value.date}\n\n此操作无法撤销！`)
+  
+  if (confirmed) {
+    tripsStore.deleteTrip(trip.value.id)
+    router.push('/')
+  }
+}
+
 function showMoreOptions() {
   const options = [
     '复制出行信息',
     '分享给朋友', 
-    '删除这条记录',
     '导出为PDF'
   ]
   
@@ -377,12 +400,8 @@ function showMoreOptions() {
   
   if (choice) {
     const index = parseInt(choice) - 1
-    if (index === 2 && trip.value) { // 删除
-      if (confirm('确定要删除这条记录吗？此操作不可撤销。')) {
-        tripsStore.deleteTrip(trip.value.id)
-        router.push('/')
-      }
-    }
+    // 其他功能可以在这里实现
+    console.log('选择了:', options[index])
   }
 }
 </script>
@@ -490,5 +509,33 @@ function showMoreOptions() {
 .fab-button:hover {
   transform: scale(1.1);
   box-shadow: 0 6px 16px rgba(0, 123, 255, 0.5);
+}
+
+.delete-trip-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.delete-trip-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.delete-trip-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
 }
 </style>

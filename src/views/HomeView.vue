@@ -28,7 +28,6 @@
           :key="`round-${index}`"
           :outbound="roundTrip.outbound"
           :return-trip="roundTrip.return"
-          @delete="handleDeleteTrip"
         />
         
         <!-- 单程行程 -->
@@ -36,7 +35,6 @@
           v-for="trip in tripsStore.singleTrips" 
           :key="trip.id" 
           :trip="trip"
-          @delete="handleDeleteTrip"
         />
         
         <div v-if="tripsStore.trips.length === 0" class="text-center py-12">
@@ -64,11 +62,6 @@ import BottomNavigation from '@/components/BottomNavigation.vue'
 
 const tripsStore = useTripsStore()
 
-function handleDeleteTrip(id: string) {
-  if (confirm('确定删除这条记录吗？')) {
-    tripsStore.deleteTrip(id)
-  }
-}
 
 function loadSampleData() {
   tripsStore.loadSampleData()

@@ -45,14 +45,6 @@
           </div>
         </div>
         
-        <!-- 删除按钮 -->
-        <button 
-          @click.stop="$emit('delete', trip.id)"
-          class="delete-btn"
-          title="删除记录"
-        >
-          🗑️
-        </button>
       </div>
     </div>
   </div>
@@ -69,9 +61,6 @@ const props = defineProps<{
   isInRoundTrip?: boolean
 }>()
 
-defineEmits<{
-  delete: [id: string]
-}>()
 
 function formatDateShort(dateStr: string) {
   const date = new Date(dateStr)
@@ -356,22 +345,6 @@ function goToDetail() {
   font-weight: 600;
 }
 
-.delete-btn {
-  position: absolute;
-  top: 50px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-  padding: 4px;
-}
-
-.delete-btn:hover {
-  opacity: 1;
-}
 
 /* 移动端优化 */
 @media (max-width: 480px) {
@@ -427,11 +400,6 @@ function goToDetail() {
     font-size: 14px;
   }
   
-  .delete-btn {
-    top: 44px;
-    right: 12px;
-    font-size: 14px;
-  }
 }
 
 /* 超小屏幕优化 */

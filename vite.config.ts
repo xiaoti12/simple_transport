@@ -1,26 +1,15 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { webdavProxy } from './vite-webdav-proxy'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), webdavProxy()],
   resolve: {
     alias: {
       '@': new URL('./src', import.meta.url).pathname
     }
   },
   server: {
-    host: '0.0.0.0',
-    proxy: {
-      '/api/webdav-proxy': {
-        target: 'https://app.koofr.net',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/webdav-proxy/, '/dav'),
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq) => {
-            proxyReq.setHeader('User-Agent', 'WebDAV-Client/1.0')
-          })
-        }
-      }
-    }
+    host: '0.0.0.0'
   }
 })

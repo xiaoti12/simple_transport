@@ -38,9 +38,6 @@ export class WebDAVService {
       })
       
       console.log('WebDAV客户端初始化成功')
-      console.log('代理模式:', this.config.useProxy)
-      console.log('原始URL:', this.config.url)
-      console.log('客户端URL:', webdavUrl)
     } catch (error) {
       console.error('WebDAV客户端初始化失败:', error)
       throw new Error('WebDAV客户端初始化失败')
@@ -54,7 +51,6 @@ export class WebDAVService {
 
     try {
       await this.client.getDirectoryContents('/')
-      console.log('WebDAV连接测试成功')
       return true
     } catch (error) {
       console.error('WebDAV连接测试失败:', error)
@@ -82,11 +78,40 @@ export class WebDAVService {
       await this.client.putFileContents(fileName, content, {
         overwrite: true
       })
-      console.log('数据上传成功:', fileName)
     } catch (error) {
       console.error('数据上传失败:', error)
       throw new Error(`数据上传失败: ${error instanceof Error ? error.message : '未知错误'}`)
     }
+  }
+
+  // 浏览器环境兼容的 Buffer 转换函数
+  private convertBufferData(content: any): string {
+    // 如果是字符串，尝试解析
+    if (typeof content === 'string') {
+      try {
+        const bufferObj = JSON.parse(content)
+        if (bufferObj && bufferObj.type === 'Buffer' && Array.isArray(bufferObj.data)) {
+          // 浏览器环境下手动转换 Buffer 数据
+          const uint8Array = new Uint8Array(bufferObj.data)
+          const decoder = new TextDecoder('utf-8')
+          return decoder.decode(uint8Array)
+        }
+        return content
+      } catch (error) {
+        return content
+      }
+    }
+    
+    // 直接是Buffer对象
+    if (content && typeof content === 'object' && content.type === 'Buffer' && Array.isArray(content.data)) {
+      // 浏览器环境下手动转换 Buffer 数据
+      const uint8Array = new Uint8Array(content.data)
+      const decoder = new TextDecoder('utf-8')
+      return decoder.decode(uint8Array)
+    }
+    
+    // 其他情况返回字符串
+    return String(content)
   }
 
   async downloadData(): Promise<SyncData> {
@@ -99,17 +124,25 @@ export class WebDAVService {
     try {
       const content = await this.client.getFileContents(fileName, { format: 'text' })
       
-      if (typeof content !== 'string') {
-        throw new Error('下载的文件格式不正确')
+      // 使用简化的Buffer转换逻辑  
+      let finalContent = this.convertBufferData(content)
+      
+      // 如果第一次转换后还是Buffer格式，再转换一次
+      try {
+        const parsed = JSON.parse(finalContent)
+        if (parsed && parsed.type === 'Buffer' && Array.isArray(parsed.data)) {
+          finalContent = this.convertBufferData(finalContent)
+        }
+      } catch (error) {
+        // 不是JSON或不是Buffer，继续使用当前内容
       }
-
-      const syncData: SyncData = JSON.parse(content)
+      
+      const syncData: SyncData = JSON.parse(finalContent)
       
       if (!syncData.trips || !Array.isArray(syncData.trips)) {
         throw new Error('同步数据格式不正确：缺少trips数组')
       }
 
-      console.log('数据下载成功:', fileName)
       return syncData
     } catch (error) {
       console.error('数据下载失败:', error)

@@ -1,6 +1,30 @@
 import type { AIConfig, TripRecord } from '@/types'
 
 // JSON Schema定义多张票据信息结构
+// 时间自动填充函数：当只有出行时间或到达时间时，将另一个时间自动填充为相同的时间
+function autoFillMissingTime(ticket: any): any {
+  const departureTime = ticket.departure?.time
+  const arrivalTime = ticket.arrival?.time
+  
+  // 如果出发时间存在但到达时间不存在，用出发时间填充到达时间
+  if (departureTime && !arrivalTime) {
+    console.log('🔄 自动填充到达时间:', departureTime)
+    if (ticket.arrival) {
+      ticket.arrival.time = departureTime
+    }
+  }
+  
+  // 如果到达时间存在但出发时间不存在，用到达时间填充出发时间
+  if (arrivalTime && !departureTime) {
+    console.log('🔄 自动填充出发时间:', arrivalTime)
+    if (ticket.departure) {
+      ticket.departure.time = arrivalTime
+    }
+  }
+  
+  return ticket
+}
+
 export const ticketsSchema = {
   type: "object",
   properties: {
@@ -175,22 +199,25 @@ ${JSON.stringify(ticketsSchema, null, 2)}
         const tripRecords: Partial<TripRecord>[] = ticketsData.tickets.map((ticket: any, index: number) => {
           console.log(`🎫 处理第${index + 1}张票据:`, ticket)
 
+          // 应用时间自动填充逻辑  
+          const processedTicket = autoFillMissingTime(ticket)
+
           const tripRecord: Partial<TripRecord> = {
-            type: ticket.type || 'train',
-            date: ticket.departure?.time ? ticket.departure.time.split('T')[0] : new Date().toISOString().split('T')[0],
+            type: processedTicket.type || 'train',
+            date: processedTicket.departure?.time ? processedTicket.departure.time.split('T')[0] : new Date().toISOString().split('T')[0],
             departure: {
-              time: ticket.departure?.time || '',
-              city: ticket.departure?.city || '',
-              station: ticket.departure?.station || ''
+              time: processedTicket.departure?.time || '',
+              city: processedTicket.departure?.city || '',
+              station: processedTicket.departure?.station || ''
             },
             arrival: {
-              time: ticket.arrival?.time || '',
-              city: ticket.arrival?.city || '',
-              station: ticket.arrival?.station || ''
+              time: processedTicket.arrival?.time || '',
+              city: processedTicket.arrival?.city || '',
+              station: processedTicket.arrival?.station || ''
             },
-            price: ticket.price || 0,
-            airline: ticket.airline || '',
-            flightNumber: ticket.flightNumber || '',
+            price: processedTicket.price || 0,
+            airline: processedTicket.airline || '',
+            flightNumber: processedTicket.flightNumber || '',
             travelers: ['我'] // AI录入默认出行人为"我"
           }
 
@@ -305,22 +332,25 @@ ${textContent}`
         const tripRecords: Partial<TripRecord>[] = ticketsData.tickets.map((ticket: any, index: number) => {
           console.log(`🎫 处理第${index + 1}张票据:`, ticket)
 
+          // 应用时间自动填充逻辑  
+          const processedTicket = autoFillMissingTime(ticket)
+
           const tripRecord: Partial<TripRecord> = {
-            type: ticket.type || 'train',
-            date: ticket.departure?.time ? ticket.departure.time.split('T')[0] : new Date().toISOString().split('T')[0],
+            type: processedTicket.type || 'train',
+            date: processedTicket.departure?.time ? processedTicket.departure.time.split('T')[0] : new Date().toISOString().split('T')[0],
             departure: {
-              time: ticket.departure?.time || '',
-              city: ticket.departure?.city || '',
-              station: ticket.departure?.station || ''
+              time: processedTicket.departure?.time || '',
+              city: processedTicket.departure?.city || '',
+              station: processedTicket.departure?.station || ''
             },
             arrival: {
-              time: ticket.arrival?.time || '',
-              city: ticket.arrival?.city || '',
-              station: ticket.arrival?.station || ''
+              time: processedTicket.arrival?.time || '',
+              city: processedTicket.arrival?.city || '',
+              station: processedTicket.arrival?.station || ''
             },
-            price: ticket.price || 0,
-            airline: ticket.airline || '',
-            flightNumber: ticket.flightNumber || '',
+            price: processedTicket.price || 0,
+            airline: processedTicket.airline || '',
+            flightNumber: processedTicket.flightNumber || '',
             travelers: ['我'] // AI录入默认出行人为"我"
           }
 

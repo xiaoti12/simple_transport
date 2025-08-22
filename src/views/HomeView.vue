@@ -21,7 +21,7 @@
       </div>
 
       <!-- 出行记录列表 -->
-      <div class="space-y-3">
+      <div class="space-y-3 pb-20">
         <!-- 按时间倒序显示往返行程和单程行程 -->
         <template v-for="item in tripsStore.sortedAllTrips" :key="item.type === 'round' ? `round-${item.data.outbound.id}` : item.data.id">
           <!-- 往返行程 -->

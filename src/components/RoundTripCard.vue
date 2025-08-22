@@ -117,6 +117,7 @@ const totalPrice = computed(() => {
   justify-content: center;
   align-items: center;
   background: #f8f9fa;
+  z-index: 1;
 }
 
 .round-trip-connector::before {
@@ -140,7 +141,8 @@ const totalPrice = computed(() => {
   justify-content: center;
   font-size: 14px;
   color: #667eea;
-  z-index: 1;
+  z-index: 10;
+  position: relative;
 }
 
 /* 移动端优化 */

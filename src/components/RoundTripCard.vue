@@ -48,8 +48,15 @@ const totalPrice = computed(() => {
   border-radius: 16px;
   margin-bottom: 20px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e8f5e8;
   overflow: hidden;
   position: relative;
+  transition: all 0.2s ease;
+}
+
+.round-trip-container:hover {
+  border-color: #4caf50;
+  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.12);
 }
 
 .round-trip-header {
@@ -89,11 +96,17 @@ const totalPrice = computed(() => {
   margin-bottom: 0;
   box-shadow: none;
   border-radius: 0;
+  border: none;
   border-bottom: 1px solid #f0f0f0;
 }
 
 .round-trip-content :deep(.trip-card:last-child) {
   border-bottom: none;
+}
+
+.round-trip-content :deep(.trip-card:hover) {
+  border-color: transparent;
+  box-shadow: none;
 }
 
 

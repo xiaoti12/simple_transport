@@ -182,13 +182,20 @@ function goToDetail() {
   border-radius: 16px;
   margin-bottom: 15px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e3f2fd;
   overflow: hidden;
   position: relative;
-  transition: transform 0.2s ease;
+  transition: all 0.2s ease;
+}
+
+.trip-card:hover {
+  border-color: #2196f3;
+  box-shadow: 0 4px 20px rgba(33, 150, 243, 0.12);
 }
 
 .trip-card:active {
   transform: scale(0.98);
+  border-color: #1976d2;
 }
 
 .date-section {

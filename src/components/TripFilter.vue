@@ -395,13 +395,11 @@ watch([filteredTrips, hasActiveFilters], ([newTrips, hasFilters]) => {
 }
 
 .filter-bar {
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 12px 16px;
+  background: #f9fafb;
+  padding: 14px 16px;
   position: sticky;
   top: 0;
   z-index: 101;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .filter-bar-content {
@@ -409,8 +407,13 @@ watch([filteredTrips, hasActiveFilters], ([newTrips, hasFilters]) => {
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
 }
 
 .filter-items {
@@ -431,26 +434,29 @@ watch([filteredTrips, hasActiveFilters], ([newTrips, hasFilters]) => {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 12px;
-  background: #f3f4f6;
-  border-radius: 20px;
+  padding: 8px 14px;
+  background: #f8f9fa;
+  border-radius: 22px;
   cursor: pointer;
   white-space: nowrap;
-  font-size: 14px;
-  color: #374151;
+  font-size: 13px;
+  color: #495057;
   transition: all 0.2s ease;
-  border: 1px solid transparent;
+  border: 1px solid #e5e5e5;
   flex-shrink: 0;
+  font-weight: 500;
 }
 
 .filter-item:hover {
-  background: #e5e7eb;
+  background: #f0f0f0;
+  border-color: #d5d5d5;
 }
 
 .filter-item.active {
-  background: #dbeafe;
-  color: #1d4ed8;
-  border-color: #3b82f6;
+  background: #e3f2fd;
+  color: #1565c0;
+  border-color: #2196f3;
+  font-weight: 600;
 }
 
 .filter-label {
@@ -479,34 +485,40 @@ watch([filteredTrips, hasActiveFilters], ([newTrips, hasFilters]) => {
 }
 
 .reset-button {
-  padding: 6px 12px;
-  background: #ef4444;
+  padding: 8px 16px;
+  background: #dc3545;
   color: white;
   border: none;
-  border-radius: 16px;
+  border-radius: 20px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(220, 53, 69, 0.2);
+  margin-left: auto;
 }
 
 .reset-button:hover {
-  background: #dc2626;
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
 }
 
 .filter-panel {
   position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 440px;
   background: white;
   border: 1px solid #e5e7eb;
-  border-top: none;
-  max-height: 400px;
+  max-height: 380px;
   overflow-y: auto;
   z-index: 102;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
 }
 
 .filter-options {
@@ -522,20 +534,21 @@ watch([filteredTrips, hasActiveFilters], ([newTrips, hasFilters]) => {
 
 .options-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
 }
 
 .option-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  padding: 10px 12px;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: white;
+  background: #ffffff;
+  font-size: 13px;
 }
 
 .option-item:hover {
@@ -577,10 +590,79 @@ watch([filteredTrips, hasActiveFilters], ([newTrips, hasFilters]) => {
   z-index: 99;
 }
 
+/* PC端优化 */
+@media (min-width: 768px) {
+  .filter-bar {
+    padding: 16px 20px;
+  }
+  
+  .filter-bar-content {
+    max-width: 400px;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 14px;
+  }
+  
+  .filter-items {
+    gap: 10px;
+  }
+  
+  .filter-item {
+    padding: 8px 16px;
+    font-size: 13px;
+    border-radius: 18px;
+    min-height: 34px;
+  }
+  
+  .filter-item.active {
+    background: #e3f2fd;
+    color: #1565c0;
+    border-color: #2196f3;
+    font-weight: 600;
+  }
+  
+  .filter-item:hover:not(.active) {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+  }
+  
+  .filter-panel {
+    max-width: 400px;
+    border-radius: 14px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  }
+  
+  .filter-options {
+    padding: 20px;
+  }
+  
+  .options-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+  
+  .option-item {
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    min-height: 38px;
+  }
+  
+  .reset-button {
+    padding: 9px 18px;
+    font-size: 13px;
+    border-radius: 18px;
+  }
+}
+
 /* 移动端优化 */
 @media (max-width: 480px) {
   .filter-bar {
-    padding: 10px 12px;
+    padding: 12px;
+  }
+  
+  .filter-bar-content {
+    padding: 10px 14px;
   }
   
   .filter-items {

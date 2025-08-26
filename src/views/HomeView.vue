@@ -14,11 +14,11 @@
     <div class="max-w-md mx-auto px-4 py-6">
       <div class="grid grid-cols-2 gap-4 mb-6">
         <div class="bg-white rounded-lg p-4 shadow-sm">
-          <div class="text-2xl font-bold text-blue-600">{{ tripsStore.trips.length }}</div>
+          <div class="text-2xl font-bold text-blue-600">{{ currentTripCount }}</div>
           <div class="text-sm text-gray-500">总行程</div>
         </div>
         <div class="bg-white rounded-lg p-4 shadow-sm">
-          <div class="text-2xl font-bold text-green-600">¥{{ tripsStore.totalSpent.toLocaleString() }}</div>
+          <div class="text-2xl font-bold text-green-600">¥{{ currentTotalSpent.toLocaleString() }}</div>
           <div class="text-sm text-gray-500">总花费</div>
         </div>
       </div>
@@ -154,6 +154,18 @@ const hasFilters = ref(false)
 // 检查是否有活跃的筛选条件
 const hasActiveFilters = computed(() => {
   return hasFilters.value
+})
+
+// 计算当前显示的行程数量
+const currentTripCount = computed(() => {
+  const trips = hasActiveFilters.value ? filteredTrips.value : tripsStore.trips
+  return trips.length
+})
+
+// 计算当前显示的总花费
+const currentTotalSpent = computed(() => {
+  const trips = hasActiveFilters.value ? filteredTrips.value : tripsStore.trips
+  return trips.reduce((total, trip) => total + trip.price, 0)
 })
 
 function handleFiltersChanged(trips: TripRecord[], hasActiveFilters: boolean) {

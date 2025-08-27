@@ -10,6 +10,18 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
 
+  // 添加详细的请求日志
+  console.log('Vercel WebDAV Proxy Request:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    headers: {
+      authorization: req.headers.authorization ? 'present' : 'missing',
+      contentType: req.headers['content-type'],
+      contentLength: req.headers['content-length']
+    }
+  })
+
   try {
     const { targetUrl: baseUrl, path } = req.query
 
@@ -62,12 +74,26 @@ export default async function handler(req, res) {
       headers['Depth'] = req.headers['depth']
     }
 
-    // 处理请求体
+    // 处理请求体 - Vercel需要手动读取请求体
     let body
     if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
-      if (req.body) {
+      if (req.body !== undefined) {
+        // 如果已经有body（可能被Vercel解析过）
         body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body)
+      } else {
+        // 手动读取原始请求体
+        const chunks = []
+        req.on('data', (chunk) => {
+          chunks.push(chunk)
+        })
+        await new Promise((resolve) => {
+          req.on('end', resolve)
+        })
+        if (chunks.length > 0) {
+          body = Buffer.concat(chunks).toString()
+        }
       }
+      console.log('Request body length:', body ? body.length : 0)
     }
 
     // 转发请求到WebDAV服务器
@@ -77,7 +103,11 @@ export default async function handler(req, res) {
       body
     })
 
-    console.log('Response status:', response.status)
+    console.log('WebDAV server response:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries())
+    })
 
     // 设置响应状态
     res.status(response.status)
@@ -93,6 +123,15 @@ export default async function handler(req, res) {
 
     // 转发响应体
     const responseText = await response.text()
+    
+    // 如果是错误响应，记录详细信息
+    if (response.status >= 400) {
+      console.error('WebDAV server error response:', {
+        status: response.status,
+        body: responseText.substring(0, 500) // 只记录前500字符
+      })
+    }
+    
     res.send(responseText)
 
   } catch (error) {

@@ -66,12 +66,27 @@ export default async function handler(req, res) {
       'User-Agent': 'WebDAV-Client/1.0'
     }
 
+    // GET请求特殊处理
+    if (req.method === 'GET') {
+      // 添加Accept头，确保服务器知道我们期望的内容类型
+      headers['Accept'] = 'application/json, text/plain, */*'
+      // 一些WebDAV服务器可能需要Cache-Control
+      headers['Cache-Control'] = 'no-cache'
+    }
+
     // 处理Content-Type和Depth头
     if (req.headers['content-type']) {
       headers['Content-Type'] = req.headers['content-type']
     }
     if (req.headers['depth']) {
       headers['Depth'] = req.headers['depth']
+    }
+    // 转发其他可能重要的头部
+    if (req.headers['accept']) {
+      headers['Accept'] = req.headers['accept']
+    }
+    if (req.headers['cache-control']) {
+      headers['Cache-Control'] = req.headers['cache-control']
     }
 
     // 处理请求体 - Vercel需要手动读取请求体
@@ -97,11 +112,24 @@ export default async function handler(req, res) {
     }
 
     // 转发请求到WebDAV服务器
-    const response = await fetch(targetUrl, {
+    const fetchOptions = {
       method: req.method,
       headers,
       body
+    }
+    
+    // 为GET请求添加超时设置，避免Vercel函数超时
+    if (req.method === 'GET') {
+      fetchOptions.signal = AbortSignal.timeout(25000) // 25秒超时
+    }
+    
+    console.log('Sending request to WebDAV server:', {
+      url: targetUrl,
+      method: req.method,
+      headers: Object.keys(headers)
     })
+    
+    const response = await fetch(targetUrl, fetchOptions)
 
     console.log('WebDAV server response:', {
       status: response.status,
@@ -128,7 +156,12 @@ export default async function handler(req, res) {
     if (response.status >= 400) {
       console.error('WebDAV server error response:', {
         status: response.status,
-        body: responseText.substring(0, 500) // 只记录前500字符
+        statusText: response.statusText,
+        requestMethod: req.method,
+        requestUrl: targetUrl,
+        requestHeaders: headers,
+        responseHeaders: Object.fromEntries(response.headers.entries()),
+        body: responseText.substring(0, 1000) // 记录前1000字符以获得更多错误信息
       })
     }
     

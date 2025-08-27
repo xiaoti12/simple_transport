@@ -291,19 +291,38 @@
 
             <!-- 多条记录选择器 -->
             <div v-if="recognitionResults.length > 1" class="mb-4">
-              <div class="flex items-center space-x-2 mb-2">
-                <span class="text-sm font-medium text-gray-700">选择记录：</span>
-                <div class="flex space-x-1">
+              <div class="record-info rounded-lg p-4">
+                <!-- 记录导航 -->
+                <div class="flex items-center justify-between mb-3">
                   <button
-                    v-for="(result, index) in recognitionResults"
-                    :key="index"
-                    @click="selectedResultIndex = index"
-                    class="px-3 py-1 text-xs rounded-full border"
-                    :class="selectedResultIndex === index 
-                      ? 'bg-blue-500 text-white border-blue-500' 
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300'"
+                    @click="selectedResultIndex = Math.max(0, selectedResultIndex - 1)"
+                    :disabled="selectedResultIndex === 0"
+                    class="record-navigation-button flex items-center justify-center w-12 h-12 rounded-full border-2"
+                    :class="selectedResultIndex === 0 
+                      ? 'border-gray-200 text-gray-300' 
+                      : 'border-blue-500 text-blue-500 hover:bg-blue-50 active:bg-blue-100'"
                   >
-                    第{{index + 1}}张票
+                    ←
+                  </button>
+                  
+                  <div class="text-center flex-1 px-4">
+                    <div class="record-counter text-lg">
+                      第 {{selectedResultIndex + 1}} / {{recognitionResults.length}} 条
+                    </div>
+                    <div class="record-route text-sm mt-1">
+                      {{recognitionResults[selectedResultIndex]?.departure?.city || '未知'}} → {{recognitionResults[selectedResultIndex]?.arrival?.city || '未知'}}
+                    </div>
+                  </div>
+                  
+                  <button
+                    @click="selectedResultIndex = Math.min(recognitionResults.length - 1, selectedResultIndex + 1)"
+                    :disabled="selectedResultIndex === recognitionResults.length - 1"
+                    class="record-navigation-button flex items-center justify-center w-12 h-12 rounded-full border-2"
+                    :class="selectedResultIndex === recognitionResults.length - 1
+                      ? 'border-gray-200 text-gray-300' 
+                      : 'border-blue-500 text-blue-500 hover:bg-blue-50 active:bg-blue-100'"
+                  >
+                    →
                   </button>
                 </div>
               </div>
@@ -540,19 +559,38 @@
 
             <!-- 多条记录选择器 -->
             <div v-if="recognitionResults.length > 1" class="mb-4">
-              <div class="flex items-center space-x-2 mb-2">
-                <span class="text-sm font-medium text-gray-700">选择记录：</span>
-                <div class="flex space-x-1">
+              <div class="record-info rounded-lg p-4">
+                <!-- 记录导航 -->
+                <div class="flex items-center justify-between mb-3">
                   <button
-                    v-for="(result, index) in recognitionResults"
-                    :key="index"
-                    @click="selectedResultIndex = index"
-                    class="px-3 py-1 text-xs rounded-full border"
-                    :class="selectedResultIndex === index 
-                      ? 'bg-green-500 text-white border-green-500' 
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-green-300'"
+                    @click="selectedResultIndex = Math.max(0, selectedResultIndex - 1)"
+                    :disabled="selectedResultIndex === 0"
+                    class="record-navigation-button flex items-center justify-center w-12 h-12 rounded-full border-2"
+                    :class="selectedResultIndex === 0 
+                      ? 'border-gray-200 text-gray-300' 
+                      : 'border-green-500 text-green-500 hover:bg-green-50 active:bg-green-100'"
                   >
-                    第{{index + 1}}条
+                    ←
+                  </button>
+                  
+                  <div class="text-center flex-1 px-4">
+                    <div class="record-counter text-lg">
+                      第 {{selectedResultIndex + 1}} / {{recognitionResults.length}} 条
+                    </div>
+                    <div class="record-route text-sm mt-1">
+                      {{recognitionResults[selectedResultIndex]?.departure?.city || '未知'}} → {{recognitionResults[selectedResultIndex]?.arrival?.city || '未知'}}
+                    </div>
+                  </div>
+                  
+                  <button
+                    @click="selectedResultIndex = Math.min(recognitionResults.length - 1, selectedResultIndex + 1)"
+                    :disabled="selectedResultIndex === recognitionResults.length - 1"
+                    class="record-navigation-button flex items-center justify-center w-12 h-12 rounded-full border-2"
+                    :class="selectedResultIndex === recognitionResults.length - 1
+                      ? 'border-gray-200 text-gray-300' 
+                      : 'border-green-500 text-green-500 hover:bg-green-50 active:bg-green-100'"
+                  >
+                    →
                   </button>
                 </div>
               </div>
@@ -747,7 +785,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTripsStore } from '@/stores/trips'
 import BottomNavigation from '@/components/BottomNavigation.vue'
@@ -1085,6 +1123,22 @@ function clearRecognitionResult() {
   }
 }
 
+// 键盘导航支持
+function handleKeyNavigation(event: KeyboardEvent) {
+  if (recognitionResults.value.length <= 1) return
+  
+  switch (event.key) {
+    case 'ArrowLeft':
+      event.preventDefault()
+      selectedResultIndex.value = Math.max(0, selectedResultIndex.value - 1)
+      break
+    case 'ArrowRight':
+      event.preventDefault()
+      selectedResultIndex.value = Math.min(recognitionResults.value.length - 1, selectedResultIndex.value + 1)
+      break
+  }
+}
+
 // 检查AI配置
 function checkAIConfig() {
   const config = getAIConfig()
@@ -1095,6 +1149,14 @@ function checkAIConfig() {
 // 组件挂载时检查AI配置
 onMounted(() => {
   checkAIConfig()
+  
+  // 添加键盘事件监听
+  document.addEventListener('keydown', handleKeyNavigation)
+})
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyNavigation)
 })
 </script>
 
@@ -1264,5 +1326,44 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 input[type="date"]:hover::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]:hover::-webkit-calendar-picker-indicator {
   opacity: 1;
+}
+
+/* 记录导航按钮样式优化 */
+.record-navigation-button {
+  font-size: 18px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.record-navigation-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.record-navigation-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.record-navigation-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 记录信息显示优化 */
+.record-info {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid #e2e8f0;
+}
+
+.record-counter {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.record-route {
+  color: #64748b;
+  font-weight: 500;
 }
 </style>

@@ -11,17 +11,33 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { path } = req.query
+    const { targetUrl: baseUrl, path } = req.query
 
-    // 构建目标URL - 处理路径拼接
-    const targetPath = Array.isArray(path) ? path.join('/') : (path || '')
-    const cleanPath = targetPath.replace(/\/$/, '') // 移除末尾斜杠
-    // TODO 这里写死了url
-    const targetUrl = `https://app.koofr.net/dav/${cleanPath}/`
+    // 构建目标URL
+    let targetUrl
+    if (baseUrl) {
+      // 通用WebDAV服务器
+      targetUrl = baseUrl
+      if (path) {
+        const pathStr = Array.isArray(path) ? path.join('/') : path
+        // 确保正确拼接路径
+        const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+        const normalizedPath = pathStr.startsWith('/') ? pathStr : '/' + pathStr
+        targetUrl = normalizedBase + normalizedPath
+      }
+    } else if (path) {
+      // 兼容旧版Koofr格式
+      const targetPath = Array.isArray(path) ? path.join('/') : (path || '')
+      const cleanPath = targetPath.replace(/\/$/, '')
+      targetUrl = `https://app.koofr.net/dav/${cleanPath}/`
+    } else {
+      return res.status(400).json({ error: 'Missing targetUrl or path parameter' })
+    }
 
     console.log('Proxying request:', {
       method: req.method,
-      path: cleanPath,
+      baseUrl,
+      path,
       targetUrl,
       hasAuth: !!req.headers.authorization
     })
@@ -54,7 +70,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 转发请求到Koofr
+    // 转发请求到WebDAV服务器
     const response = await fetch(targetUrl, {
       method: req.method,
       headers,

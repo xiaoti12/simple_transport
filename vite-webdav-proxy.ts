@@ -21,16 +21,36 @@ export function webdavProxy(): Plugin {
 
         try {
           const url = new URL(req.url || '', `http://${req.headers.host}`)
+          const baseUrl = url.searchParams.get('targetUrl')
           const path = url.searchParams.get('path')
 
           // 构建目标URL
-          const targetPath = Array.isArray(path) ? path.join('/') : (path || '')
-          const cleanPath = targetPath.replace(/\/$/, '')
-          const targetUrl = `https://app.koofr.net/dav/${cleanPath}/`
+          let targetUrl
+          if (baseUrl) {
+            // 通用WebDAV服务器
+            targetUrl = baseUrl
+            if (path) {
+              // 确保正确拼接路径
+              const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+              const normalizedPath = path.startsWith('/') ? path : '/' + path
+              targetUrl = normalizedBase + normalizedPath
+            }
+          } else if (path) {
+            // 兼容旧版Koofr格式
+            const targetPath = Array.isArray(path) ? path.join('/') : (path || '')
+            const cleanPath = targetPath.replace(/\/$/, '')
+            targetUrl = `https://app.koofr.net/dav/${cleanPath}/`
+          } else {
+            res.statusCode = 400
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'Missing targetUrl or path parameter' }))
+            return
+          }
 
           console.log('本地代理WebDAV请求:', {
             method: req.method,
-            path: cleanPath,
+            baseUrl,
+            path,
             targetUrl,
             hasAuth: !!req.headers.authorization
           })
@@ -70,7 +90,7 @@ export function webdavProxy(): Plugin {
             }
           }
 
-          // 转发请求到Koofr
+          // 转发请求到WebDAV服务器
           const response = await fetch(targetUrl, {
             method: req.method,
             headers,

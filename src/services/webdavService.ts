@@ -18,25 +18,18 @@ export class WebDAVService {
 
     try {
       let webdavUrl = this.config.url
-      
+
       // 如果开启代理模式，替换为代理URL
       if (this.config.useProxy) {
-        // 检测是否为Koofr服务
-        if (this.config.url.includes('app.koofr.net')) {
-          // 提取路径部分，例如从 https://app.koofr.net/dav/Koofr 提取 Koofr
-          const pathMatch = this.config.url.match(/\/dav\/(.*)$/)
-          const servicePath = pathMatch ? pathMatch[1] : ''
-          webdavUrl = `/api/webdav-proxy?path=${encodeURIComponent(servicePath)}`
-        } else {
-          console.warn('代理模式当前仅支持Koofr WebDAV服务')
-        }
+        // 使用代理服务，将WebDAV服务器URL作为参数传递
+        webdavUrl = `/api/webdav-proxy?targetUrl=${encodeURIComponent(this.config.url)}`
       }
 
       this.client = createClient(webdavUrl, {
         username: this.config.username,
         password: this.config.password
       })
-      
+
       console.log('WebDAV客户端初始化成功')
     } catch (error) {
       console.error('WebDAV客户端初始化失败:', error)
@@ -76,7 +69,10 @@ export class WebDAVService {
 
     try {
       await this.client.putFileContents(fileName, content, {
-        overwrite: true
+        overwrite: true,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8'
+        }
       })
     } catch (error) {
       console.error('数据上传失败:', error)
@@ -84,35 +80,6 @@ export class WebDAVService {
     }
   }
 
-  // 浏览器环境兼容的 Buffer 转换函数
-  private convertBufferData(content: any): string {
-    // 如果是字符串，尝试解析
-    if (typeof content === 'string') {
-      try {
-        const bufferObj = JSON.parse(content)
-        if (bufferObj && bufferObj.type === 'Buffer' && Array.isArray(bufferObj.data)) {
-          // 浏览器环境下手动转换 Buffer 数据
-          const uint8Array = new Uint8Array(bufferObj.data)
-          const decoder = new TextDecoder('utf-8')
-          return decoder.decode(uint8Array)
-        }
-        return content
-      } catch (error) {
-        return content
-      }
-    }
-    
-    // 直接是Buffer对象
-    if (content && typeof content === 'object' && content.type === 'Buffer' && Array.isArray(content.data)) {
-      // 浏览器环境下手动转换 Buffer 数据
-      const uint8Array = new Uint8Array(content.data)
-      const decoder = new TextDecoder('utf-8')
-      return decoder.decode(uint8Array)
-    }
-    
-    // 其他情况返回字符串
-    return String(content)
-  }
 
   async downloadData(): Promise<SyncData> {
     if (!this.client) {
@@ -123,22 +90,10 @@ export class WebDAVService {
 
     try {
       const content = await this.client.getFileContents(fileName, { format: 'text' })
-      
-      // 使用简化的Buffer转换逻辑  
-      let finalContent = this.convertBufferData(content)
-      
-      // 如果第一次转换后还是Buffer格式，再转换一次
-      try {
-        const parsed = JSON.parse(finalContent)
-        if (parsed && parsed.type === 'Buffer' && Array.isArray(parsed.data)) {
-          finalContent = this.convertBufferData(finalContent)
-        }
-      } catch (error) {
-        // 不是JSON或不是Buffer，继续使用当前内容
-      }
-      
-      const syncData: SyncData = JSON.parse(finalContent)
-      
+
+      // 直接反序列化JSON
+      const syncData: SyncData = JSON.parse(content as string)
+
       if (!syncData.trips || !Array.isArray(syncData.trips)) {
         throw new Error('同步数据格式不正确：缺少trips数组')
       }

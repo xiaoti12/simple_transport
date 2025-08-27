@@ -140,7 +140,7 @@
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 required />
               <p class="text-xs text-gray-500 mt-1">
-                支持各种WebDAV服务，如NextCloud、ownCloud等
+                支持各种WebDAV服务，如NextCloud、ownCloud、Koofr等
               </p>
             </div>
 
@@ -233,8 +233,8 @@
               • 同步文件：simple-transport-sync.json<br><br>
               ⚠️ <strong>CORS问题解决方案：</strong><br>
               • 推荐启用"使用代理模式"来解决CORS跨域访问问题<br>
-              • 当前代理模式支持Koofr WebDAV服务<br>
-              • 如使用其他WebDAV服务出现跨域错误，请关闭代理模式或配置服务器CORS
+              • 代理模式现已支持所有WebDAV服务（NextCloud、ownCloud、Koofr等）<br>
+              • 如使用其他WebDAV服务出现跨域错误，请开启代理模式或配置服务器CORS
             </p>
           </div>
         </div>

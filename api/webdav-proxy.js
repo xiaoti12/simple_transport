@@ -10,18 +10,46 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
 
-  try {
-    const { path } = req.query
+  // 添加详细的请求日志
+  console.log('Vercel WebDAV Proxy Request:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    headers: {
+      authorization: req.headers.authorization ? 'present' : 'missing',
+      contentType: req.headers['content-type'],
+      contentLength: req.headers['content-length']
+    }
+  })
 
-    // 构建目标URL - 处理路径拼接
-    const targetPath = Array.isArray(path) ? path.join('/') : (path || '')
-    const cleanPath = targetPath.replace(/\/$/, '') // 移除末尾斜杠
-    // TODO 这里写死了url
-    const targetUrl = `https://app.koofr.net/dav/${cleanPath}/`
+  try {
+    const { targetUrl: baseUrl, path } = req.query
+
+    // 构建目标URL
+    let targetUrl
+    if (baseUrl) {
+      // 通用WebDAV服务器
+      targetUrl = baseUrl
+      if (path) {
+        const pathStr = Array.isArray(path) ? path.join('/') : path
+        // 确保正确拼接路径
+        const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+        const normalizedPath = pathStr.startsWith('/') ? pathStr : '/' + pathStr
+        targetUrl = normalizedBase + normalizedPath
+      }
+    } else if (path) {
+      // 兼容旧版Koofr格式
+      const targetPath = Array.isArray(path) ? path.join('/') : (path || '')
+      const cleanPath = targetPath.replace(/\/$/, '')
+      targetUrl = `https://app.koofr.net/dav/${cleanPath}/`
+    } else {
+      return res.status(400).json({ error: 'Missing targetUrl or path parameter' })
+    }
 
     console.log('Proxying request:', {
       method: req.method,
-      path: cleanPath,
+      baseUrl,
+      path,
       targetUrl,
       hasAuth: !!req.headers.authorization
     })
@@ -38,6 +66,14 @@ export default async function handler(req, res) {
       'User-Agent': 'WebDAV-Client/1.0'
     }
 
+    // GET请求特殊处理
+    if (req.method === 'GET') {
+      // 添加Accept头，确保服务器知道我们期望的内容类型
+      headers['Accept'] = 'application/json, text/plain, */*'
+      // 一些WebDAV服务器可能需要Cache-Control
+      headers['Cache-Control'] = 'no-cache'
+    }
+
     // 处理Content-Type和Depth头
     if (req.headers['content-type']) {
       headers['Content-Type'] = req.headers['content-type']
@@ -45,23 +81,61 @@ export default async function handler(req, res) {
     if (req.headers['depth']) {
       headers['Depth'] = req.headers['depth']
     }
-
-    // 处理请求体
-    let body
-    if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
-      if (req.body) {
-        body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body)
-      }
+    // 转发其他可能重要的头部
+    if (req.headers['accept']) {
+      headers['Accept'] = req.headers['accept']
+    }
+    if (req.headers['cache-control']) {
+      headers['Cache-Control'] = req.headers['cache-control']
     }
 
-    // 转发请求到Koofr
-    const response = await fetch(targetUrl, {
+    // 处理请求体 - Vercel需要手动读取请求体
+    let body
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+      if (req.body !== undefined) {
+        // 如果已经有body（可能被Vercel解析过）
+        body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body)
+      } else {
+        // 手动读取原始请求体
+        const chunks = []
+        req.on('data', (chunk) => {
+          chunks.push(chunk)
+        })
+        await new Promise((resolve) => {
+          req.on('end', resolve)
+        })
+        if (chunks.length > 0) {
+          body = Buffer.concat(chunks).toString()
+        }
+      }
+      console.log('Request body length:', body ? body.length : 0)
+    }
+
+    // 转发请求到WebDAV服务器
+    const fetchOptions = {
       method: req.method,
       headers,
       body
+    }
+    
+    // 为GET请求添加超时设置，避免Vercel函数超时
+    if (req.method === 'GET') {
+      fetchOptions.signal = AbortSignal.timeout(25000) // 25秒超时
+    }
+    
+    console.log('Sending request to WebDAV server:', {
+      url: targetUrl,
+      method: req.method,
+      headers: Object.keys(headers)
     })
+    
+    const response = await fetch(targetUrl, fetchOptions)
 
-    console.log('Response status:', response.status)
+    console.log('WebDAV server response:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries())
+    })
 
     // 设置响应状态
     res.status(response.status)
@@ -77,6 +151,20 @@ export default async function handler(req, res) {
 
     // 转发响应体
     const responseText = await response.text()
+    
+    // 如果是错误响应，记录详细信息
+    if (response.status >= 400) {
+      console.error('WebDAV server error response:', {
+        status: response.status,
+        statusText: response.statusText,
+        requestMethod: req.method,
+        requestUrl: targetUrl,
+        requestHeaders: headers,
+        responseHeaders: Object.fromEntries(response.headers.entries()),
+        body: responseText.substring(0, 1000) // 记录前1000字符以获得更多错误信息
+      })
+    }
+    
     res.send(responseText)
 
   } catch (error) {

@@ -224,19 +224,6 @@
             </div>
           </div>
 
-          <!-- 同步说明 -->
-          <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-            <p class="text-xs text-blue-800">
-              📋 <strong>同步说明：</strong><br>
-              • 上传：将本地的出行记录和AI配置上传到WebDAV服务器<br>
-              • 下载：从WebDAV服务器下载数据并完全覆盖本地数据<br>
-              • 同步文件：simple-transport-sync.json<br><br>
-              ⚠️ <strong>CORS问题解决方案：</strong><br>
-              • 推荐启用"使用代理模式"来解决CORS跨域访问问题<br>
-              • 代理模式现已支持所有WebDAV服务（NextCloud、ownCloud、Koofr等）<br>
-              • 如使用其他WebDAV服务出现跨域错误，请开启代理模式或配置服务器CORS
-            </p>
-          </div>
         </div>
       </div>
 

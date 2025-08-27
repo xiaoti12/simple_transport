@@ -11,7 +11,7 @@
     <TripFilter @filters-changed="handleFiltersChanged" />
 
     <!-- 统计卡片 -->
-    <div class="max-w-md mx-auto px-4 py-6">
+    <div class="max-w-md mx-auto px-4 py-2">
       <div class="grid grid-cols-2 gap-4 mb-6">
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="text-2xl font-bold text-blue-600">{{ currentTripCount }}</div>
@@ -26,21 +26,15 @@
       <!-- 出行记录列表 -->
       <div class="space-y-3 pb-20">
         <!-- 按时间倒序显示往返行程和单程行程 -->
-        <template v-for="item in displayedTrips" :key="item.type === 'round' ? `round-${item.data.outbound.id}` : item.data.id">
+        <template v-for="item in displayedTrips"
+          :key="item.type === 'round' ? `round-${item.data.outbound.id}` : item.data.id">
           <!-- 往返行程 -->
-          <RoundTripCard
-            v-if="item.type === 'round'"
-            :outbound="item.data.outbound"
-            :return-trip="item.data.return"
-          />
-          
+          <RoundTripCard v-if="item.type === 'round'" :outbound="item.data.outbound" :return-trip="item.data.return" />
+
           <!-- 单程行程 -->
-          <TripCard 
-            v-else
-            :trip="item.data"
-          />
+          <TripCard v-else :trip="item.data" />
         </template>
-        
+
         <div v-if="tripsStore.trips.length === 0" class="text-center py-12">
           <div class="text-gray-400 text-lg mb-2">📱</div>
           <p class="text-gray-500 mb-4">还没有出行记录</p>
@@ -82,27 +76,27 @@ const displayedTrips = computed(() => {
   // 检测往返行程的逻辑（从trips store复制过来）
   const roundTripList = []
   const usedIndexes = new Set<number>()
-  
+
   for (let i = 0; i < trips.length; i++) {
     if (usedIndexes.has(i)) continue
-    
+
     const trip1 = trips[i]
     const departure1 = trip1.departure.city
     const arrival1 = trip1.arrival.city
-    
+
     for (let j = i + 1; j < trips.length; j++) {
       if (usedIndexes.has(j)) continue
-      
+
       const trip2 = trips[j]
       const departure2 = trip2.departure.city
       const arrival2 = trip2.arrival.city
-      
+
       // 检查是否为往返（A→B 和 B→A）
       if ((departure1 === arrival2 && arrival1 === departure2)) {
         // 按时间排序，确定去程和返程
         const earlierTrip = new Date(trip1.date) <= new Date(trip2.date) ? trip1 : trip2
         const laterTrip = new Date(trip1.date) <= new Date(trip2.date) ? trip2 : trip1
-        
+
         roundTripList.push({
           outbound: earlierTrip,
           return: laterTrip,
@@ -125,7 +119,7 @@ const displayedTrips = computed(() => {
     data: any
     sortDate: Date
   }> = []
-  
+
   // 添加往返行程
   roundTripList.forEach(roundTrip => {
     allItems.push({
@@ -134,7 +128,7 @@ const displayedTrips = computed(() => {
       sortDate: new Date(roundTrip.outbound.date)
     })
   })
-  
+
   // 添加单程行程
   singleTrips.forEach(trip => {
     allItems.push({
@@ -143,7 +137,7 @@ const displayedTrips = computed(() => {
       sortDate: new Date(trip.date)
     })
   })
-  
+
   // 按时间倒序排序（最新的在前面）
   return allItems.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime())
 })

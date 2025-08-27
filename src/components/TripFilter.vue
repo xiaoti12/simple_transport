@@ -396,7 +396,7 @@ watch([filteredTrips, hasActiveFilters], ([newTrips, hasFilters]) => {
 
 .filter-bar {
   background: #f9fafb;
-  padding: 14px 16px;
+  padding: 10px 16px;
   position: sticky;
   top: 0;
   z-index: 101;
@@ -593,7 +593,7 @@ watch([filteredTrips, hasActiveFilters], ([newTrips, hasFilters]) => {
 /* PC端优化 */
 @media (min-width: 768px) {
   .filter-bar {
-    padding: 16px 20px;
+    padding: 12px 20px;
   }
   
   .filter-bar-content {
@@ -658,7 +658,7 @@ watch([filteredTrips, hasActiveFilters], ([newTrips, hasFilters]) => {
 /* 移动端优化 */
 @media (max-width: 480px) {
   .filter-bar {
-    padding: 12px;
+    padding: 8px;
   }
   
   .filter-bar-content {

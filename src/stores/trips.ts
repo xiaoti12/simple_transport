@@ -7,7 +7,7 @@ function generateUniqueId(existingIds: Set<string>): string {
   let id: string
   do {
     // 使用时间戳 + 随机数确保唯一性
-    id = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    id = `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
   } while (existingIds.has(id))
   return id
 }
@@ -45,43 +45,58 @@ export const useTripsStore = defineStore('trips', () => {
   const roundTrips = computed(() => {
     // 确保数据已加载
     if (!isLoaded) loadFromStorage()
+    console.log('开始检测往返行程，总行程数:', trips.value.length)
     const roundTripList = []
     const usedIndexes = new Set<number>()
-    
-    for (let i = 0; i < trips.value.length; i++) {
-      if (usedIndexes.has(i)) continue
-      
-      const trip1 = trips.value[i]
-      // 提取城市名（去掉机场名）
+
+    // 按时间倒序排序，从最新的开始检测
+    const sortedTripIndices = trips.value
+      .map((trip, index) => ({ trip, index }))
+      .sort((a, b) => new Date(b.trip.date).getTime() - new Date(a.trip.date).getTime())
+
+    for (let i = 0; i < sortedTripIndices.length; i++) {
+      if (usedIndexes.has(sortedTripIndices[i].index)) continue
+
+      const { trip: trip1, index: index1 } = sortedTripIndices[i]
       const departure1 = trip1.departure.city
       const arrival1 = trip1.arrival.city
-      
-      for (let j = i + 1; j < trips.value.length; j++) {
-        if (usedIndexes.has(j)) continue
-        
-        const trip2 = trips.value[j]
+
+      // 从当前行程往后检查（时间上更早的行程）
+      for (let j = i + 1; j < sortedTripIndices.length; j++) {
+        if (usedIndexes.has(sortedTripIndices[j].index)) continue
+
+        const { trip: trip2, index: index2 } = sortedTripIndices[j]
         const departure2 = trip2.departure.city
         const arrival2 = trip2.arrival.city
-        
+
         // 检查是否为往返（A→B 和 B→A）
         if ((departure1 === arrival2 && arrival1 === departure2)) {
-          // 按时间排序，确定去程和返程
-          const earlierTrip = new Date(trip1.date) <= new Date(trip2.date) ? trip1 : trip2
-          const laterTrip = new Date(trip1.date) <= new Date(trip2.date) ? trip2 : trip1
-          
-          roundTripList.push({
-            outbound: earlierTrip,
-            return: laterTrip,
-            totalPrice: trip1.price + trip2.price,
-            route: `${earlierTrip.departure.city} ⇄ ${earlierTrip.arrival.city}`
-          })
-          usedIndexes.add(i)
-          usedIndexes.add(j)
-          break
+          // 计算时间间隔（以天为单位）
+          const date1 = new Date(trip1.date)
+          const date2 = new Date(trip2.date)
+          const daysDiff = Math.abs(date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24)
+
+          // 只有在合理的时间范围内才认为是往返行程（比如30天内）
+          if (daysDiff <= 30) {
+            // trip1是较新的（返程），trip2是较早的（去程）
+            const outboundTrip = trip2  // 较早的行程作为去程
+            const returnTrip = trip1    // 较新的行程作为返程
+            console.log(`检测到往返行程: ${outboundTrip.departure.city} ⇄ ${outboundTrip.arrival.city} (去程:${outboundTrip.date}, 返程:${returnTrip.date}, 间隔${Math.round(daysDiff)}天)`)
+            roundTripList.push({
+              outbound: outboundTrip,
+              return: returnTrip,
+              totalPrice: trip1.price + trip2.price,
+              route: `${outboundTrip.departure.city} ⇄ ${outboundTrip.arrival.city}`
+            })
+            usedIndexes.add(index1)
+            usedIndexes.add(index2)
+            break
+          }
         }
       }
     }
-    
+
+    console.log(`往返行程检测完成，发现${roundTripList.length}个往返行程`)
     return { roundTrips: roundTripList, usedIndexes }
   })
 
@@ -98,7 +113,7 @@ export const useTripsStore = defineStore('trips', () => {
       data: any
       sortDate: Date
     }> = []
-    
+
     // 添加往返行程（使用出发时间作为排序依据）
     roundTrips.value.roundTrips.forEach(roundTrip => {
       allItems.push({
@@ -107,7 +122,7 @@ export const useTripsStore = defineStore('trips', () => {
         sortDate: new Date(roundTrip.outbound.date)
       })
     })
-    
+
     // 添加单程行程
     singleTrips.value.forEach(trip => {
       allItems.push({
@@ -116,7 +131,7 @@ export const useTripsStore = defineStore('trips', () => {
         sortDate: new Date(trip.date)
       })
     })
-    
+
     // 按时间倒序排序（最新的在前面）
     return allItems.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime())
   })
@@ -193,7 +208,7 @@ export const useTripsStore = defineStore('trips', () => {
     if (!isLoaded) loadFromStorage()
     // 不能删除"我"
     if (name === '我') return
-    
+
     const index = travelerConfig.value.availableTravelers.indexOf(name)
     if (index > -1) {
       travelerConfig.value.availableTravelers.splice(index, 1)
@@ -234,15 +249,15 @@ export const useTripsStore = defineStore('trips', () => {
     if (hasChanges) {
       console.log('已修复数据中的重复ID问题')
     }
-    
+
     return hasChanges
   }
 
   function loadFromStorage() {
     if (isLoaded) return // 防止重复加载
-    
+
     console.log('开始从localStorage加载数据')
-    
+
     // 先加载出行人配置
     const storedTravelerConfig = localStorage.getItem('simple-transport-traveler-config')
     if (storedTravelerConfig) {
@@ -256,7 +271,7 @@ export const useTripsStore = defineStore('trips', () => {
     } else {
       console.log('未找到存储的出行人配置，使用默认值')
     }
-    
+
     // 再加载出行记录
     const stored = localStorage.getItem('simple-transport-trips')
     if (stored) {
@@ -279,7 +294,7 @@ export const useTripsStore = defineStore('trips', () => {
       // 如果没有存储数据，自动加载示例数据
       loadSampleData()
     }
-    
+
     isLoaded = true
   }
 

@@ -70,76 +70,99 @@ const filteredTrips = ref<TripRecord[]>([])
 
 // 根据筛选结果生成显示的行程列表
 const displayedTrips = computed(() => {
-  // 如果有筛选条件活跃，使用筛选结果，否则使用所有行程
-  const trips = hasActiveFilters.value ? filteredTrips.value : tripsStore.trips
-
-  // 检测往返行程的逻辑（从trips store复制过来）
-  const roundTripList = []
-  const usedIndexes = new Set<number>()
-
-  for (let i = 0; i < trips.length; i++) {
-    if (usedIndexes.has(i)) continue
-
-    const trip1 = trips[i]
-    const departure1 = trip1.departure.city
-    const arrival1 = trip1.arrival.city
-
-    for (let j = i + 1; j < trips.length; j++) {
-      if (usedIndexes.has(j)) continue
-
-      const trip2 = trips[j]
-      const departure2 = trip2.departure.city
-      const arrival2 = trip2.arrival.city
-
-      // 检查是否为往返（A→B 和 B→A）
-      if ((departure1 === arrival2 && arrival1 === departure2)) {
-        // 按时间排序，确定去程和返程
-        const earlierTrip = new Date(trip1.date) <= new Date(trip2.date) ? trip1 : trip2
-        const laterTrip = new Date(trip1.date) <= new Date(trip2.date) ? trip2 : trip1
-
-        roundTripList.push({
-          outbound: earlierTrip,
-          return: laterTrip,
-          totalPrice: trip1.price + trip2.price,
-          route: `${earlierTrip.departure.city} ⇄ ${earlierTrip.arrival.city}`
-        })
-        usedIndexes.add(i)
-        usedIndexes.add(j)
-        break
+  // 如果有筛选条件活跃，使用筛选结果，否则使用store中的sortedAllTrips
+  if (hasActiveFilters.value) {
+    // 对筛选结果应用相同的往返行程检测逻辑
+    const trips = filteredTrips.value
+    console.log('筛选模式：检测往返行程，筛选后行程数:', trips.length)
+    
+    // 使用与store相同的算法
+    const roundTripList = []
+    const usedIndexes = new Set<number>()
+    
+    // 按时间倒序排序，从最新的开始检测
+    const sortedTripIndices = trips
+      .map((trip, index) => ({ trip, index }))
+      .sort((a, b) => new Date(b.trip.date).getTime() - new Date(a.trip.date).getTime())
+    
+    for (let i = 0; i < sortedTripIndices.length; i++) {
+      if (usedIndexes.has(sortedTripIndices[i].index)) continue
+      
+      const { trip: trip1, index: index1 } = sortedTripIndices[i]
+      const departure1 = trip1.departure.city
+      const arrival1 = trip1.arrival.city
+      
+      // 从当前行程往后检查（时间上更早的行程）
+      for (let j = i + 1; j < sortedTripIndices.length; j++) {
+        if (usedIndexes.has(sortedTripIndices[j].index)) continue
+        
+        const { trip: trip2, index: index2 } = sortedTripIndices[j]
+        const departure2 = trip2.departure.city
+        const arrival2 = trip2.arrival.city
+        
+        // 检查是否为往返（A→B 和 B→A）
+        if ((departure1 === arrival2 && arrival1 === departure2)) {
+          // 计算时间间隔（以天为单位）
+          const date1 = new Date(trip1.date)
+          const date2 = new Date(trip2.date)
+          const daysDiff = Math.abs(date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24)
+          
+          // 只有在合理的时间范围内才认为是往返行程（比如30天内）
+          if (daysDiff <= 30) {
+            // trip1是较新的（返程），trip2是较早的（去程）
+            const outboundTrip = trip2  // 较早的行程作为去程
+            const returnTrip = trip1    // 较新的行程作为返程
+            console.log(`筛选模式：检测到往返行程: ${outboundTrip.departure.city} ⇄ ${outboundTrip.arrival.city} (去程:${outboundTrip.date}, 返程:${returnTrip.date}, 间隔${Math.round(daysDiff)}天)`)
+            roundTripList.push({
+              outbound: outboundTrip,
+              return: returnTrip,
+              totalPrice: trip1.price + trip2.price,
+              route: `${outboundTrip.departure.city} ⇄ ${outboundTrip.arrival.city}`
+            })
+            usedIndexes.add(index1)
+            usedIndexes.add(index2)
+            break
+          }
+        }
       }
     }
+    
+    // 单程行程（不在往返行程中的）
+    const singleTrips = trips.filter((_, index) => !usedIndexes.has(index))
+    
+    // 统一排序的行程列表
+    const allItems: Array<{
+      type: 'round' | 'single'
+      data: any
+      sortDate: Date
+    }> = []
+    
+    // 添加往返行程
+    roundTripList.forEach(roundTrip => {
+      allItems.push({
+        type: 'round',
+        data: roundTrip,
+        sortDate: new Date(roundTrip.outbound.date)
+      })
+    })
+    
+    // 添加单程行程
+    singleTrips.forEach(trip => {
+      allItems.push({
+        type: 'single',
+        data: trip,
+        sortDate: new Date(trip.date)
+      })
+    })
+    
+    console.log(`筛选模式：往返行程检测完成，发现${roundTripList.length}个往返行程`)
+    // 按时间倒序排序（最新的在前面）
+    return allItems.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime())
+  } else {
+    // 无筛选条件时，直接使用store中已优化的sortedAllTrips
+    console.log('无筛选：使用store中的sortedAllTrips')
+    return tripsStore.sortedAllTrips
   }
-
-  // 单程行程（不在往返行程中的）
-  const singleTrips = trips.filter((_, index) => !usedIndexes.has(index))
-
-  // 统一排序的行程列表
-  const allItems: Array<{
-    type: 'round' | 'single'
-    data: any
-    sortDate: Date
-  }> = []
-
-  // 添加往返行程
-  roundTripList.forEach(roundTrip => {
-    allItems.push({
-      type: 'round',
-      data: roundTrip,
-      sortDate: new Date(roundTrip.outbound.date)
-    })
-  })
-
-  // 添加单程行程
-  singleTrips.forEach(trip => {
-    allItems.push({
-      type: 'single',
-      data: trip,
-      sortDate: new Date(trip.date)
-    })
-  })
-
-  // 按时间倒序排序（最新的在前面）
-  return allItems.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime())
 })
 
 // 用于跟踪是否有筛选条件

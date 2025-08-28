@@ -115,7 +115,9 @@
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" v-model="webdavConfig.enabled" class="sr-only peer" />
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div
+                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+              </div>
             </label>
           </div>
 
@@ -126,7 +128,9 @@
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" v-model="webdavConfig.useProxy" class="sr-only peer" />
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div
+                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+              </div>
             </label>
           </div>
 
@@ -140,6 +144,7 @@
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 required />
               <p class="text-xs text-gray-500 mt-1">
+                支持各种WebDAV服务，如NextCloud、ownCloud、Koofr等
                 支持各种WebDAV服务，如NextCloud、ownCloud、Koofr等
               </p>
             </div>
@@ -160,7 +165,8 @@
                 密码
               </label>
               <div class="relative">
-                <input v-model="webdavConfig.password" :type="showWebdavPassword ? 'text' : 'password'" placeholder="password"
+                <input v-model="webdavConfig.password" :type="showWebdavPassword ? 'text' : 'password'"
+                  placeholder="password"
                   class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   required />
                 <button type="button" @click="showWebdavPassword = !showWebdavPassword"
@@ -206,7 +212,7 @@
               class="bg-orange-600 text-white py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
               {{ isSyncing ? '同步中...' : '⬆️ 上传数据' }}
             </button>
-            
+
             <button @click="downloadFromWebdav" :disabled="!isWebdavConfigValid || isSyncing"
               class="bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
               {{ isSyncing ? '同步中...' : '⬇️ 下载数据' }}
@@ -224,19 +230,6 @@
             </div>
           </div>
 
-          <!-- 同步说明 -->
-          <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-            <p class="text-xs text-blue-800">
-              📋 <strong>同步说明：</strong><br>
-              • 上传：将本地的出行记录和AI配置上传到WebDAV服务器<br>
-              • 下载：从WebDAV服务器下载数据并完全覆盖本地数据<br>
-              • 同步文件：simple-transport-sync.json<br><br>
-              ⚠️ <strong>CORS问题解决方案：</strong><br>
-              • 推荐启用"使用代理模式"来解决CORS跨域访问问题<br>
-              • 代理模式现已支持所有WebDAV服务（NextCloud、ownCloud、Koofr等）<br>
-              • 如使用其他WebDAV服务出现跨域错误，请开启代理模式或配置服务器CORS
-            </p>
-          </div>
         </div>
       </div>
 
@@ -251,17 +244,11 @@
           <div>
             <h3 class="font-medium mb-2">出行人列表</h3>
             <div class="flex flex-wrap gap-2">
-              <div 
-                v-for="traveler in tripsStore.travelerConfig.availableTravelers" 
-                :key="traveler"
-                class="flex items-center bg-blue-50 border border-blue-200 rounded-lg px-3 py-2"
-              >
+              <div v-for="traveler in tripsStore.travelerConfig.availableTravelers" :key="traveler"
+                class="flex items-center bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
                 <span class="text-sm">{{ traveler }}</span>
-                <button 
-                  v-if="traveler !== '我'" 
-                  @click="removeTraveler(traveler)"
-                  class="ml-2 text-red-500 hover:text-red-700"
-                >
+                <button v-if="traveler !== '我'" @click="removeTraveler(traveler)"
+                  class="ml-2 text-red-500 hover:text-red-700">
                   ×
                 </button>
               </div>
@@ -275,18 +262,11 @@
           <div>
             <h3 class="font-medium mb-2">添加新出行人</h3>
             <div class="flex gap-2">
-              <input 
-                v-model="newTravelerName" 
-                type="text" 
-                placeholder="请输入出行人姓名"
+              <input v-model="newTravelerName" type="text" placeholder="请输入出行人姓名"
                 class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                @keyup.enter="addNewTraveler"
-              />
-              <button 
-                @click="addNewTraveler"
-                :disabled="!newTravelerName.trim()"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-              >
+                @keyup.enter="addNewTraveler" />
+              <button @click="addNewTraveler" :disabled="!newTravelerName.trim()"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
                 添加
               </button>
             </div>
@@ -496,7 +476,7 @@ async function testWebdavConnection() {
 
   try {
     const success = await syncService.testWebDAVConnection()
-    
+
     if (success) {
       webdavTestResult.value = { success: true, message: 'WebDAV连接测试成功!' }
     } else {
@@ -538,7 +518,7 @@ async function downloadFromWebdav() {
   try {
     await syncService.downloadFromWebDAV()
     syncResult.value = { success: true, message: '数据下载成功！页面将刷新以应用新数据' }
-    
+
     setTimeout(() => {
       window.location.reload()
     }, 2000)
@@ -567,7 +547,7 @@ function addNewTraveler() {
 // 删除出行人
 function removeTraveler(name: string) {
   if (name === '我') return
-  
+
   if (confirm(`确定要删除出行人"${name}"吗？`)) {
     tripsStore.removeTraveler(name)
   }

@@ -5,8 +5,13 @@
       <div class="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
         <button @click="goBack" class="text-blue-500 text-lg">← 返回</button>
         <h1 class="text-xl font-bold text-gray-900">出行详情</h1>
-        <button @click="saveChanges" class="text-green-500 font-medium" :disabled="saving">
-          {{ saving ? '保存中...' : (hasChanges ? '保存' : '已保存') }}
+        <button 
+          v-if="hasChanges || saving || saved" 
+          @click="saveChanges" 
+          class="text-green-500 font-medium" 
+          :disabled="saving || saved"
+        >
+          {{ saving ? '保存中...' : (saved ? '已保存' : '保存') }}
         </button>
       </div>
     </header>
@@ -215,7 +220,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTripsStore } from '@/stores/trips'
 import type { TripRecord } from '@/types'
@@ -228,13 +233,18 @@ const trip = ref<TripRecord | null>(null)
 const notes = ref('')
 const hasChanges = ref(false)
 const saving = ref(false)
+const saved = ref(false)
 const isEditing = ref(false)
 const isInitialized = ref(false)
 const showTravelersEditor = ref(false)
 const selectedTravelers = ref<string[]>([])
 
 
-onMounted(() => {
+onMounted(async () => {
+  // 确保页面滚动到顶部
+  await nextTick()
+  window.scrollTo(0, 0)
+  
   const tripId = route.params.id as string
   if (tripId) {
     const foundTrip = tripsStore.getTripById(tripId)
@@ -421,6 +431,7 @@ function updateTripField(field: string, value: string) {
 
 function markChanged() {
   hasChanges.value = true
+  saved.value = false // 清除已保存状态
 }
 
 function updateTravelers() {
@@ -452,10 +463,13 @@ async function saveChanges() {
     
     await tripsStore.updateTrip(tripToSave)
     hasChanges.value = false
+    saving.value = false
+    saved.value = true
     
+    // 1.5秒后隐藏"已保存"按钮
     setTimeout(() => {
-      saving.value = false
-    }, 500)
+      saved.value = false
+    }, 1500)
   } catch (error) {
     console.error('保存失败:', error)
     saving.value = false

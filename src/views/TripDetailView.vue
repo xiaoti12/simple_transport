@@ -176,6 +176,71 @@
           </div>
         </div>
         
+        <!-- 关联往返行程信息 -->
+        <div v-if="linkedTrip" class="bg-white rounded-lg p-4 shadow-sm border-l-4 border-blue-400">
+          <div class="text-sm text-gray-600 mb-3 flex items-center gap-2">
+            <span>🔗</span>
+            <span>关联{{ isOutbound ? '返程' : '去程' }}信息</span>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-3">
+            <!-- 关联行程卡片 -->
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-3">
+                <div class="airline-logo-small" :style="{ background: getLinkedAirlineColor() }">
+                  {{ getLinkedAirlineShort() }}
+                </div>
+                <div>
+                  <div class="text-sm font-medium text-gray-800">
+                    {{ linkedTrip.airline || (linkedTrip.type === 'flight' ? '航空公司' : '铁路公司') }}
+                  </div>
+                  <div class="text-xs text-gray-600">
+                    {{ linkedTrip.flightNumber || (linkedTrip.type === 'flight' ? '航班号' : '车次号') }}
+                  </div>
+                </div>
+              </div>
+              <div class="text-sm font-semibold text-blue-600">
+                ¥{{ linkedTrip.price }}
+              </div>
+            </div>
+            
+            <!-- 出发到达信息 -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">出发</span>
+                <div class="text-right">
+                  <div class="font-medium">{{ formatTime(linkedTrip.departure.time) }}</div>
+                  <div class="text-xs text-gray-600">
+                    {{ linkedTrip.departure.city }} {{ getTerminalInfo(linkedTrip.departure.station) }}
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">到达</span>
+                <div class="text-right">
+                  <div class="font-medium">{{ formatTime(linkedTrip.arrival.time) }}</div>
+                  <div class="text-xs text-gray-600">
+                    {{ linkedTrip.arrival.city }} {{ getTerminalInfo(linkedTrip.arrival.station) }}
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">日期</span>
+                <div class="font-medium">{{ linkedTrip.date }}</div>
+              </div>
+            </div>
+            
+            <!-- 关联提示信息 -->
+            <div class="mt-3 pt-3 border-t border-gray-200 text-center">
+              <div class="text-xs text-gray-500">
+                这是{{ isOutbound ? '去程' : '返程' }}行程，上方显示了对应的{{ isOutbound ? '返程' : '去程' }}信息
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 备注信息 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="text-sm text-gray-600 mb-2">备注</div>
@@ -239,6 +304,16 @@ const isInitialized = ref(false)
 const showTravelersEditor = ref(false)
 const selectedTravelers = ref<string[]>([])
 
+// 计算关联的往返行程
+const linkedTrip = computed(() => {
+  if (!trip.value?.roundTrip) return null
+  return tripsStore.getTripById(trip.value.roundTrip.linkedTripId)
+})
+
+// 当前行程是否为去程
+const isOutbound = computed(() => {
+  return trip.value?.roundTrip?.type === 'outbound'
+})
 
 onMounted(async () => {
   // 确保页面滚动到顶部
@@ -497,6 +572,55 @@ function confirmDeleteTrip() {
   }
 }
 
+// 获取关联行程的航空公司颜色
+function getLinkedAirlineColor() {
+  if (!linkedTrip.value) return '#667eea'
+  if (linkedTrip.value.type === 'train') {
+    return '#28a745'
+  }
+  return '#667eea'
+}
+
+// 获取关联行程的航空公司简称
+function getLinkedAirlineShort() {
+  if (!linkedTrip.value) return '✈️'
+  if (linkedTrip.value.type === 'train') return '🚄'
+  
+  if (linkedTrip.value.airline) {
+    const airlineNames: Record<string, string> = {
+      '中国国际航空': '国',
+      '中国东方航空': '东',
+      '中国南方航空': '南',
+      '海南航空': '海',
+      '深圳航空': '深',
+      '四川航空': '川',
+      '厦门航空': '厦',
+      '春秋航空': '春',
+      '吉祥航空': '吉',
+      '山东航空': '鲁',
+      '天津航空': '津',
+      '首都航空': '首',
+      '西部航空': '西',
+      '祥鹏航空': '祥',
+      '九元航空': '九',
+      '联合航空': '联'
+    }
+    
+    for (const [airline, shortName] of Object.entries(airlineNames)) {
+      if (linkedTrip.value.airline.includes(airline.slice(-3))) {
+        return shortName
+      }
+    }
+    
+    const firstChar = linkedTrip.value.airline.charAt(0)
+    if (/[\u4e00-\u9fff]/.test(firstChar)) {
+      return firstChar
+    }
+  }
+  
+  return '✈️'
+}
+
 function showMoreOptions() {
   const options = [
     '复制出行信息',
@@ -577,6 +701,19 @@ function showMoreOptions() {
   color: white;
   font-weight: bold;
   font-size: 16px;
+}
+
+.airline-logo-small {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  flex-shrink: 0;
 }
 
 .route-indicator {

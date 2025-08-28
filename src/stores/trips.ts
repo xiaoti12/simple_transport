@@ -55,10 +55,14 @@ export const useTripsStore = defineStore('trips', () => {
     trips.value.forEach((trip, index) => {
       if (trip.roundTrip) {
         const linkedTripId = trip.roundTrip.linkedTripId
-        if (!cachedRoundTrips.has(linkedTripId)) {
-          cachedRoundTrips.set(linkedTripId, {})
+
+        // 使用两个行程ID中较小的那个作为key，确保往返行程对使用同一个key
+        const pairKey = trip.id < linkedTripId ? `${trip.id}-${linkedTripId}` : `${linkedTripId}-${trip.id}`
+
+        if (!cachedRoundTrips.has(pairKey)) {
+          cachedRoundTrips.set(pairKey, {})
         }
-        const roundTrip = cachedRoundTrips.get(linkedTripId)!
+        const roundTrip = cachedRoundTrips.get(pairKey)!
         if (trip.roundTrip.type === 'outbound') {
           roundTrip.outbound = trip
         } else {
@@ -68,10 +72,11 @@ export const useTripsStore = defineStore('trips', () => {
       }
     })
 
+    console.log('缓存往返行程组数:', cachedRoundTrips.size)
+
     // 将完整的缓存往返行程添加到结果中
     cachedRoundTrips.forEach((roundTrip) => {
       if (roundTrip.outbound && roundTrip.return) {
-        console.log(`使用缓存的往返行程: ${roundTrip.outbound.departure.city} ⇄ ${roundTrip.outbound.arrival.city} (去程:${roundTrip.outbound.date}, 返程:${roundTrip.return.date})`)
         roundTripList.push({
           outbound: roundTrip.outbound,
           return: roundTrip.return,
@@ -166,7 +171,9 @@ export const useTripsStore = defineStore('trips', () => {
     }> = []
 
     // 添加往返行程（使用出发时间作为排序依据）
-    roundTrips.value.roundTrips.forEach(roundTrip => {
+    const { roundTrips: roundTripsList } = roundTrips.value
+
+    roundTripsList.forEach(roundTrip => {
       allItems.push({
         type: 'round',
         data: roundTrip,
@@ -437,16 +444,27 @@ export const useTripsStore = defineStore('trips', () => {
     isLoaded = true
   }
 
-  function loadSampleData() {
-    import('@/utils/sampleData').then(({ sampleTrips }) => {
-      trips.value = sampleTrips
-      saveToStorage()
-    })
+  async function loadSampleData() {
+    const { sampleTrips } = await import('@/utils/sampleData')
+    trips.value = sampleTrips
+
+    // 立即触发往返行程检测，通过访问computed属性
+    roundTrips.value
+
+    saveToStorage()
   }
 
   function clearAllTrips() {
     trips.value = []
     saveToStorage()
+  }
+
+  // 调试函数：清除localStorage并重新加载示例数据
+  function resetAndReloadData() {
+    localStorage.removeItem('simple-transport-trips')
+    localStorage.removeItem('simple-transport-traveler-config')
+    isLoaded = false
+    loadFromStorage()
   }
 
   return {
@@ -471,6 +489,7 @@ export const useTripsStore = defineStore('trips', () => {
     loadSampleData,
     clearAllTrips,
     saveToStorage,
-    fixDuplicateIds
+    fixDuplicateIds,
+    resetAndReloadData
   }
 })

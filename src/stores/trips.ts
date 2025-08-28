@@ -49,9 +49,49 @@ export const useTripsStore = defineStore('trips', () => {
     const roundTripList = []
     const usedIndexes = new Set<number>()
 
+    // 首先收集已经有缓存关联的往返行程
+    const cachedRoundTrips = new Map<string, { outbound?: TripRecord, return?: TripRecord }>()
+
+    trips.value.forEach((trip, index) => {
+      if (trip.roundTrip) {
+        const linkedTripId = trip.roundTrip.linkedTripId
+        if (!cachedRoundTrips.has(linkedTripId)) {
+          cachedRoundTrips.set(linkedTripId, {})
+        }
+        const roundTrip = cachedRoundTrips.get(linkedTripId)!
+        if (trip.roundTrip.type === 'outbound') {
+          roundTrip.outbound = trip
+        } else {
+          roundTrip.return = trip
+        }
+        usedIndexes.add(index)
+      }
+    })
+
+    // 将完整的缓存往返行程添加到结果中
+    cachedRoundTrips.forEach((roundTrip) => {
+      if (roundTrip.outbound && roundTrip.return) {
+        console.log(`使用缓存的往返行程: ${roundTrip.outbound.departure.city} ⇄ ${roundTrip.outbound.arrival.city} (去程:${roundTrip.outbound.date}, 返程:${roundTrip.return.date})`)
+        roundTripList.push({
+          outbound: roundTrip.outbound,
+          return: roundTrip.return,
+          totalPrice: roundTrip.outbound.price + roundTrip.return.price,
+          route: `${roundTrip.outbound.departure.city} ⇄ ${roundTrip.outbound.arrival.city}`
+        })
+      }
+    })
+
+    // 对没有缓存关联的行程进行检测
+    const uncachedTrips = trips.value.filter((_, index) => !usedIndexes.has(index))
+    console.log(`开始检测未缓存的行程，数量: ${uncachedTrips.length}`)
+
     // 按时间倒序排序，从最新的开始检测
-    const sortedTripIndices = trips.value
-      .map((trip, index) => ({ trip, index }))
+    const sortedTripIndices = uncachedTrips
+      .map((trip) => {
+        // 找到在原数组中的索引
+        const realIndex = trips.value.findIndex(t => t.id === trip.id)
+        return { trip, index: realIndex }
+      })
       .sort((a, b) => new Date(b.trip.date).getTime() - new Date(a.trip.date).getTime())
 
     for (let i = 0; i < sortedTripIndices.length; i++) {
@@ -81,7 +121,12 @@ export const useTripsStore = defineStore('trips', () => {
             // trip1是较新的（返程），trip2是较早的（去程）
             const outboundTrip = trip2  // 较早的行程作为去程
             const returnTrip = trip1    // 较新的行程作为返程
-            console.log(`检测到往返行程: ${outboundTrip.departure.city} ⇄ ${outboundTrip.arrival.city} (去程:${outboundTrip.date}, 返程:${returnTrip.date}, 间隔${Math.round(daysDiff)}天)`)
+            console.log(`新检测到往返行程: ${outboundTrip.departure.city} ⇄ ${outboundTrip.arrival.city} (去程:${outboundTrip.date}, 返程:${returnTrip.date}, 间隔${Math.round(daysDiff)}天)`)
+
+            // 更新行程的往返关联信息（批量更新，稍后统一保存）
+            updateTripRoundTripLinkBatch(outboundTrip.id, returnTrip.id, 'outbound')
+            updateTripRoundTripLinkBatch(returnTrip.id, outboundTrip.id, 'return')
+
             roundTripList.push({
               outbound: outboundTrip,
               return: returnTrip,
@@ -94,6 +139,12 @@ export const useTripsStore = defineStore('trips', () => {
           }
         }
       }
+    }
+
+    // 如果检测到新的往返关联，保存到localStorage
+    if (roundTripList.length > cachedRoundTrips.size) {
+      console.log('检测到新的往返关联，保存到localStorage')
+      saveToStorage()
     }
 
     console.log(`往返行程检测完成，发现${roundTripList.length}个往返行程`)
@@ -145,12 +196,61 @@ export const useTripsStore = defineStore('trips', () => {
       travelers: trip.travelers && trip.travelers.length > 0 ? trip.travelers : ['我']
     }
     trips.value.push(newTrip)
-    saveToStorage()
+
+    // 检测新行程是否与现有行程形成往返关系
+    const foundRoundTrip = detectRoundTripForNewTrip(newTrip)
+
+    // 如果没有检测到往返关系（detectRoundTripForNewTrip内部没有保存），则这里保存
+    if (!foundRoundTrip) {
+      saveToStorage()
+    }
+  }
+
+  // 为新添加的行程检测往返关联，返回是否找到了往返关系
+  function detectRoundTripForNewTrip(newTrip: TripRecord): boolean {
+    const newDeparture = newTrip.departure.city
+    const newArrival = newTrip.arrival.city
+    const newDate = new Date(newTrip.date)
+
+    // 查找可能的往返匹配行程（30天内，且没有已有的往返关联）
+    for (const existingTrip of trips.value) {
+      if (existingTrip.id === newTrip.id || existingTrip.roundTrip) continue
+
+      const existingDeparture = existingTrip.departure.city
+      const existingArrival = existingTrip.arrival.city
+      const existingDate = new Date(existingTrip.date)
+
+      // 检查是否为往返（A→B 和 B→A）
+      if (newDeparture === existingArrival && newArrival === existingDeparture) {
+        const daysDiff = Math.abs(newDate.getTime() - existingDate.getTime()) / (1000 * 60 * 60 * 24)
+
+        if (daysDiff <= 30) {
+          // 确定去程和返程
+          const isNewTripLater = newDate > existingDate
+          const outboundTrip = isNewTripLater ? existingTrip : newTrip
+          const returnTrip = isNewTripLater ? newTrip : existingTrip
+
+          console.log(`新行程自动关联往返: ${outboundTrip.departure.city} ⇄ ${outboundTrip.arrival.city} (去程:${outboundTrip.date}, 返程:${returnTrip.date}, 间隔${Math.round(daysDiff)}天)`)
+
+          // 建立往返关联
+          updateTripRoundTripLinkBatch(outboundTrip.id, returnTrip.id, 'outbound')
+          updateTripRoundTripLinkBatch(returnTrip.id, outboundTrip.id, 'return')
+
+          // 立即保存新建立的关联
+          saveToStorage()
+
+          return true // 找到一个匹配就停止
+        }
+      }
+    }
+    return false // 没有找到匹配的往返行程
   }
 
   function deleteTrip(id: string) {
     const index = trips.value.findIndex(trip => trip.id === id)
     if (index > -1) {
+      // 清除往返关联
+      clearTripRoundTripLink(id)
       trips.value.splice(index, 1)
       saveToStorage()
     }
@@ -212,6 +312,45 @@ export const useTripsStore = defineStore('trips', () => {
     const index = travelerConfig.value.availableTravelers.indexOf(name)
     if (index > -1) {
       travelerConfig.value.availableTravelers.splice(index, 1)
+      saveToStorage()
+    }
+  }
+
+  // 更新行程的往返关联信息
+  function updateTripRoundTripLink(tripId: string, linkedTripId: string, type: 'outbound' | 'return') {
+    const trip = trips.value.find(t => t.id === tripId)
+    if (trip) {
+      trip.roundTrip = {
+        linkedTripId,
+        type
+      }
+      // 立即保存到localStorage
+      saveToStorage()
+    }
+  }
+
+  // 批量更新往返关联信息（不立即保存）
+  function updateTripRoundTripLinkBatch(tripId: string, linkedTripId: string, type: 'outbound' | 'return') {
+    const trip = trips.value.find(t => t.id === tripId)
+    if (trip) {
+      trip.roundTrip = {
+        linkedTripId,
+        type
+      }
+    }
+  }
+
+  // 清除行程的往返关联信息
+  function clearTripRoundTripLink(tripId: string) {
+    const trip = trips.value.find(t => t.id === tripId)
+    if (trip && trip.roundTrip) {
+      // 同时清除关联行程的往返信息
+      const linkedTrip = trips.value.find(t => t.id === trip.roundTrip!.linkedTripId)
+      if (linkedTrip) {
+        delete linkedTrip.roundTrip
+      }
+      delete trip.roundTrip
+      // 立即保存到localStorage
       saveToStorage()
     }
   }
@@ -326,6 +465,8 @@ export const useTripsStore = defineStore('trips', () => {
     addTraveler,
     removeTraveler,
     updateTravelerList,
+    updateTripRoundTripLink,
+    clearTripRoundTripLink,
     loadFromStorage,
     loadSampleData,
     clearAllTrips,

@@ -18,6 +18,11 @@ export interface TripRecord {
   flightNumber?: string // 航班号或车次号
   notes?: string // 备注信息
   travelers: string[] // 出行人列表
+  // 往返行程关联信息
+  roundTrip?: {
+    linkedTripId: string // 关联的往返行程ID
+    type: 'outbound' | 'return' // 当前行程在往返中的角色：去程或返程
+  }
 }
 
 export interface AIConfig {

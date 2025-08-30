@@ -35,3 +35,4 @@ dist-ssr
 .ai_material
 tsconfig.tsbuildinfo
 .vscode/mcp-project-config.json
+CLAUDE.md

@@ -70,28 +70,74 @@ const filteredTrips = ref<TripRecord[]>([])
 
 // 根据筛选结果生成显示的行程列表
 const displayedTrips = computed(() => {
-  // 如果有筛选条件活跃，将所有行程都作为单程行程显示
   if (hasActiveFilters.value) {
     const trips = filteredTrips.value
-    console.log('筛选模式：显示单个行程，筛选后行程数:', trips.length)
+    console.log('筛选模式：保持往返关联，筛选后行程数:', trips.length)
     
-    // 统一排序的行程列表 - 在筛选模式下都显示为单程行程
+    // 创建筛选后行程的ID集合，用于快速查找
+    const filteredTripIds = new Set(trips.map(trip => trip.id))
+    
     const allItems: Array<{
-      type: 'single'
+      type: 'round' | 'single'
       data: any
       sortDate: Date
     }> = []
     
-    // 将所有筛选后的行程都作为单程行程添加
-    trips.forEach(trip => {
-      allItems.push({
-        type: 'single',
-        data: trip,
-        sortDate: new Date(trip.date)
-      })
+    // 用于跟踪已处理的行程ID
+    const processedTripIds = new Set<string>()
+    
+    // 处理往返行程：只有当往返行程的两段都在筛选结果中时，才作为往返行程显示
+    const { roundTrips: roundTripsList } = tripsStore.roundTrips
+    roundTripsList.forEach(roundTrip => {
+      const outboundInFiltered = filteredTripIds.has(roundTrip.outbound.id)
+      const returnInFiltered = filteredTripIds.has(roundTrip.return.id)
+      
+      if (outboundInFiltered && returnInFiltered) {
+        // 往返行程的两段都在筛选结果中，作为往返行程显示
+        allItems.push({
+          type: 'round',
+          data: roundTrip,
+          sortDate: new Date(roundTrip.outbound.date)
+        })
+        processedTripIds.add(roundTrip.outbound.id)
+        processedTripIds.add(roundTrip.return.id)
+        console.log(`筛选模式：保留往返行程 ${roundTrip.outbound.departure.city} ⇄ ${roundTrip.outbound.arrival.city}`)
+      } else {
+        // 只有其中一段在筛选结果中，将在筛选结果中的行程作为单程显示
+        if (outboundInFiltered && !processedTripIds.has(roundTrip.outbound.id)) {
+          allItems.push({
+            type: 'single',
+            data: roundTrip.outbound,
+            sortDate: new Date(roundTrip.outbound.date)
+          })
+          processedTripIds.add(roundTrip.outbound.id)
+          console.log(`筛选模式：往返行程的去程作为单程显示 ${roundTrip.outbound.departure.city} → ${roundTrip.outbound.arrival.city}`)
+        }
+        if (returnInFiltered && !processedTripIds.has(roundTrip.return.id)) {
+          allItems.push({
+            type: 'single',
+            data: roundTrip.return,
+            sortDate: new Date(roundTrip.return.date)
+          })
+          processedTripIds.add(roundTrip.return.id)
+          console.log(`筛选模式：往返行程的返程作为单程显示 ${roundTrip.return.departure.city} → ${roundTrip.return.arrival.city}`)
+        }
+      }
     })
     
-    console.log(`筛选模式：处理完成，单程行程${trips.length}个`)
+    // 处理剩余的单程行程
+    trips.forEach(trip => {
+      if (!processedTripIds.has(trip.id)) {
+        allItems.push({
+          type: 'single',
+          data: trip,
+          sortDate: new Date(trip.date)
+        })
+        console.log(`筛选模式：添加单程行程 ${trip.departure.city} → ${trip.arrival.city}`)
+      }
+    })
+    
+    console.log(`筛选模式：处理完成，${allItems.filter(item => item.type === 'round').length}个往返行程，${allItems.filter(item => item.type === 'single').length}个单程行程`)
     // 按时间倒序排序（最新的在前面）
     return allItems.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime())
   } else {

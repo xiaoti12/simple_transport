@@ -9,8 +9,9 @@
         <div class="price">¥{{ trip.price.toLocaleString() }}</div>
         <div class="trip-header">
           <div class="airline-info">
-            <div class="airline-logo" :style="{ background: getAirlineColor() }">
-              {{ getAirlineShort() }}
+            <div class="airline-logo" :class="{ 'has-icon': getAirlineIconUrl() }" :style="getAirlineIconUrl() ? {} : { background: getAirlineColor() }">
+              <img v-if="getAirlineIconUrl()" :src="getAirlineIconUrl()!" :alt="getAirlineName()" class="airline-icon" />
+              <span v-else class="airline-text">{{ getAirlineShort() }}</span>
             </div>
             <div class="airline-details">
               <span class="airline-name">{{ getAirlineName() }}</span>
@@ -53,6 +54,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import type { TripRecord } from '@/types'
+import { getAirlineIcon, getAirlineShort as getAirlineShortName, getAirlineColor as getAirlineThemeColor } from '@/utils/airlineUtils'
 
 const router = useRouter()
 
@@ -90,49 +92,19 @@ function getAirlineColor() {
   if (props.trip.type === 'train') {
     return '#28a745'
   }
-  return '#667eea'
+  return getAirlineThemeColor(props.trip.airline)
 }
 
 function getAirlineShort() {
   if (props.trip.type === 'train') return '🚄'
   
-  // 使用航空公司名称的首个汉字作为图标
-  if (props.trip.airline) {
-    // 提取公司名称中的关键字符
-    const airlineNames: Record<string, string> = {
-      '中国国际航空': '国',
-      '中国东方航空': '东',
-      '中国南方航空': '南',
-      '海南航空': '海',
-      '深圳航空': '深',
-      '四川航空': '川',
-      '厦门航空': '厦',
-      '春秋航空': '春',
-      '吉祥航空': '吉',
-      '山东航空': '鲁',
-      '天津航空': '津',
-      '首都航空': '首',
-      '西部航空': '西',
-      '祥鹏航空': '祥',
-      '九元航空': '九',
-      '联合航空': '联'
-    }
-    
-    // 查找匹配的航空公司
-    for (const [airline, shortName] of Object.entries(airlineNames)) {
-      if (props.trip.airline.includes(airline.slice(-3))) { // 匹配后三个字如"国际航空"
-        return shortName
-      }
-    }
-    
-    // 如果没有匹配到，返回第一个汉字
-    const firstChar = props.trip.airline.charAt(0)
-    if (/[\u4e00-\u9fff]/.test(firstChar)) {
-      return firstChar
-    }
-  }
+  return getAirlineShortName(props.trip.airline || '')
+}
+
+function getAirlineIconUrl() {
+  if (props.trip.type === 'train') return null
   
-  return '✈️'
+  return getAirlineIcon(props.trip.airline || '')
 }
 
 function getAirlineName() {
@@ -261,6 +233,31 @@ function goToDetail() {
   font-weight: bold;
   font-size: 14px;
   flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.airline-logo.has-icon {
+  background: transparent !important;
+  border: 1px solid #e0e0e0;
+}
+
+.airline-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.airline-logo.has-icon .airline-icon {
+  filter: none; /* 有图标时显示原色 */
+}
+
+.airline-logo:not(.has-icon) .airline-icon {
+  filter: brightness(0) invert(1); /* 无图标时将图标变为白色 */
+}
+
+.airline-text {
+  color: white;
 }
 
 .airline-details {
@@ -381,6 +378,15 @@ function goToDetail() {
     width: 26px;
     height: 26px;
     font-size: 13px;
+  }
+  
+  .airline-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .airline-logo.has-icon {
+    border-width: 1px;
   }
   
   .airline-name {

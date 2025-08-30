@@ -86,7 +86,7 @@
         <h2 class="text-lg font-medium mb-4">平均数据</h2>
         <div class="grid grid-cols-2 gap-4 text-center">
           <div>
-            <div class="text-2xl font-bold text-purple-600">¥{{ averagePrice.toLocaleString() }}</div>
+            <div class="text-2xl font-bold text-purple-600">¥{{ averagePrice.toFixed(1) }}</div>
             <div class="text-sm text-gray-500 mt-1">平均票价</div>
           </div>
           <div>
@@ -119,21 +119,33 @@ const flightPercentage = computed(() => {
 })
 
 const monthlyStats = computed(() => {
-  const stats: Record<string, { amount: number; count: number }> = {}
+  const stats: Record<string, { amount: number; count: number; year: number; month: number }> = {}
   
   tripsStore.trips.forEach(trip => {
     const date = new Date(trip.date)
-    const monthKey = `${date.getFullYear()}年${date.getMonth() + 1}月`
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    const monthKey = `${year}年${month}月`
     
     if (!stats[monthKey]) {
-      stats[monthKey] = { amount: 0, count: 0 }
+      stats[monthKey] = { amount: 0, count: 0, year, month }
     }
     
     stats[monthKey].amount += trip.price
     stats[monthKey].count += 1
   })
   
-  return stats
+  // 按年份和月份降序排序
+  const sortedStats = Object.fromEntries(
+    Object.entries(stats).sort(([, a], [, b]) => {
+      if (a.year !== b.year) {
+        return b.year - a.year // 年份降序
+      }
+      return b.month - a.month // 月份降序
+    })
+  )
+  
+  return sortedStats
 })
 
 const maxMonthlyAmount = computed(() => {

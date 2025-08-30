@@ -61,6 +61,59 @@
         </div>
       </div>
 
+      <!-- 平均统计 -->
+      <div class="bg-white rounded-lg p-4 shadow-sm">
+        <h2 class="text-lg font-medium mb-4">平均数据</h2>
+        <div class="grid grid-cols-2 gap-4 text-center">
+          <div>
+            <div class="text-2xl font-bold text-purple-600">¥{{ averagePrice.toFixed(1) }}</div>
+            <div class="text-sm text-gray-500 mt-1">平均票价</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-orange-600">{{ tripsPerMonth.toFixed(1) }}</div>
+            <div class="text-sm text-gray-500 mt-1">月均出行</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 热门数据统计 -->
+      <div class="bg-white rounded-lg p-4 shadow-sm">
+        <h2 class="text-lg font-medium mb-4">热门数据</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <!-- 最多的出行城市 -->
+          <div v-if="tripsStore.mostDepartureCity" class="text-center p-3 bg-indigo-50 rounded-lg">
+            <div class="text-2xl mb-1">🏙️</div>
+            <div class="text-sm text-gray-500 mb-1">最多出行城市</div>
+            <div class="font-medium text-indigo-600">{{ tripsStore.mostDepartureCity.city }}</div>
+            <div class="text-xs text-gray-400">{{ tripsStore.mostDepartureCity.count }}次</div>
+          </div>
+
+          <!-- 最多的到达城市 -->
+          <div v-if="tripsStore.mostArrivalCity" class="text-center p-3 bg-teal-50 rounded-lg">
+            <div class="text-2xl mb-1">📍</div>
+            <div class="text-sm text-gray-500 mb-1">最多到达城市</div>
+            <div class="font-medium text-teal-600">{{ tripsStore.mostArrivalCity.city }}</div>
+            <div class="text-xs text-gray-400">{{ tripsStore.mostArrivalCity.count }}次</div>
+          </div>
+
+          <!-- 最多的往返行程 -->
+          <div v-if="tripsStore.mostRoundTripRoute" class="text-center p-3 bg-pink-50 rounded-lg">
+            <div class="text-2xl mb-1">🔄</div>
+            <div class="text-sm text-gray-500 mb-1">最多往返行程</div>
+            <div class="font-medium text-pink-600 text-sm">{{ tripsStore.mostRoundTripRoute.route }}</div>
+            <div class="text-xs text-gray-400">{{ tripsStore.mostRoundTripRoute.count }}次</div>
+          </div>
+
+          <!-- 最多的航空公司 -->
+          <div v-if="tripsStore.mostAirline" class="text-center p-3 bg-red-50 rounded-lg">
+            <div class="text-2xl mb-1">🏢</div>
+            <div class="text-sm text-gray-500 mb-1">最多航空公司</div>
+            <div class="font-medium text-red-600">{{ tripsStore.mostAirline.airline }}</div>
+            <div class="text-xs text-gray-400">{{ tripsStore.mostAirline.count }}次</div>
+          </div>
+        </div>
+      </div>
+
       <!-- 月度统计 -->
       <div class="bg-white rounded-lg p-4 shadow-sm">
         <h2 class="text-lg font-medium mb-4">月度花费趋势</h2>
@@ -88,21 +141,6 @@
           >
             {{ showAllMonths ? '收起' : `查看全部 ${totalMonthsCount} 个月` }}
           </button>
-        </div>
-      </div>
-
-      <!-- 平均统计 -->
-      <div class="bg-white rounded-lg p-4 shadow-sm">
-        <h2 class="text-lg font-medium mb-4">平均数据</h2>
-        <div class="grid grid-cols-2 gap-4 text-center">
-          <div>
-            <div class="text-2xl font-bold text-purple-600">¥{{ averagePrice.toFixed(1) }}</div>
-            <div class="text-sm text-gray-500 mt-1">平均票价</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold text-orange-600">{{ tripsPerMonth.toFixed(1) }}</div>
-            <div class="text-sm text-gray-500 mt-1">月均出行</div>
-          </div>
         </div>
       </div>
     </div>

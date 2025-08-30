@@ -41,6 +41,59 @@ export const useTripsStore = defineStore('trips', () => {
     return result
   })
 
+  // 最多的出行城市统计
+  const mostDepartureCity = computed(() => {
+    if (!isLoaded) loadFromStorage()
+    const cityStats: Record<string, number> = {}
+    trips.value.forEach(trip => {
+      const city = trip.departure.city
+      cityStats[city] = (cityStats[city] || 0) + 1
+    })
+    const sorted = Object.entries(cityStats).sort(([, a], [, b]) => b - a)
+    return sorted.length > 0 ? { city: sorted[0][0], count: sorted[0][1] } : null
+  })
+
+  // 最多的到达城市统计
+  const mostArrivalCity = computed(() => {
+    if (!isLoaded) loadFromStorage()
+    const cityStats: Record<string, number> = {}
+    trips.value.forEach(trip => {
+      const city = trip.arrival.city
+      cityStats[city] = (cityStats[city] || 0) + 1
+    })
+    const sorted = Object.entries(cityStats).sort(([, a], [, b]) => b - a)
+    return sorted.length > 0 ? { city: sorted[0][0], count: sorted[0][1] } : null
+  })
+
+  // 最多的往返行程统计
+  const mostRoundTripRoute = computed(() => {
+    if (!isLoaded) loadFromStorage()
+    const routeStats: Record<string, number> = {}
+    const { roundTrips: roundTripsList } = roundTrips.value
+    
+    roundTripsList.forEach(roundTrip => {
+      const route = roundTrip.route
+      routeStats[route] = (routeStats[route] || 0) + 1
+    })
+    
+    const sorted = Object.entries(routeStats).sort(([, a], [, b]) => b - a)
+    return sorted.length > 0 ? { route: sorted[0][0], count: sorted[0][1] } : null
+  })
+
+  // 最多的航空公司统计
+  const mostAirline = computed(() => {
+    if (!isLoaded) loadFromStorage()
+    const airlineStats: Record<string, number> = {}
+    trips.value.forEach(trip => {
+      if (trip.airline) {
+        const airline = trip.airline
+        airlineStats[airline] = (airlineStats[airline] || 0) + 1
+      }
+    })
+    const sorted = Object.entries(airlineStats).sort(([, a], [, b]) => b - a)
+    return sorted.length > 0 ? { airline: sorted[0][0], count: sorted[0][1] } : null
+  })
+
   // 检测往返行程
   const roundTrips = computed(() => {
     // 确保数据已加载
@@ -635,6 +688,10 @@ export const useTripsStore = defineStore('trips', () => {
     singleTrips,
     sortedAllTrips,
     travelerConfig: getTravelerConfig,
+    mostDepartureCity,
+    mostArrivalCity,
+    mostRoundTripRoute,
+    mostAirline,
     addTrip,
     deleteTrip,
     getTripById,

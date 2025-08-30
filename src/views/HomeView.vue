@@ -27,7 +27,7 @@
       <div class="space-y-3 pb-20">
         <!-- 按时间倒序显示往返行程和单程行程 -->
         <template v-for="item in displayedTrips"
-          :key="item.type === 'round' ? `round-${item.data.outbound.id}` : item.data.id">
+          :key="item.type === 'round' ? `round-${item.data.pairKey || item.data.outbound.id}` : item.data.id">
           <!-- 往返行程 -->
           <RoundTripCard v-if="item.type === 'round'" :outbound="item.data.outbound" :return-trip="item.data.return" />
 
@@ -71,76 +71,20 @@ const filteredTrips = ref<TripRecord[]>([])
 
 // 根据筛选结果生成显示的行程列表
 const displayedTrips = computed(() => {
-  // 如果有筛选条件活跃，需要重新处理筛选后的数据
+  // 如果有筛选条件活跃，将所有行程都作为单程行程显示
   if (hasActiveFilters.value) {
     const trips = filteredTrips.value
-    console.log('筛选模式：处理筛选后的行程数据，筛选后行程数:', trips.length)
+    console.log('筛选模式：显示单个行程，筛选后行程数:', trips.length)
     
-    // 首先收集已经有缓存关联的往返行程
-    const cachedRoundTrips = new Map<string, { outbound?: typeof trips[0], return?: typeof trips[0] }>()
-    const usedTripIds = new Set<string>()
-    
-    trips.forEach(trip => {
-      if (trip.roundTrip) {
-        const linkedTripId = trip.roundTrip.linkedTripId
-        // 检查关联的行程是否也在筛选结果中
-        const linkedTrip = trips.find(t => t.id === linkedTripId)
-        if (linkedTrip) {
-          if (!cachedRoundTrips.has(linkedTripId)) {
-            cachedRoundTrips.set(linkedTripId, {})
-          }
-          const roundTrip = cachedRoundTrips.get(linkedTripId)!
-          if (trip.roundTrip.type === 'outbound') {
-            roundTrip.outbound = trip
-          } else {
-            roundTrip.return = trip
-          }
-          usedTripIds.add(trip.id)
-        }
-      }
-    })
-
-    const roundTripList: Array<{
-      outbound: typeof trips[0]
-      return: typeof trips[0]
-      totalPrice: number
-      route: string
-    }> = []
-
-    // 处理完整的缓存往返行程
-    cachedRoundTrips.forEach((roundTrip) => {
-      if (roundTrip.outbound && roundTrip.return) {
-        console.log(`筛选模式：使用缓存往返行程: ${roundTrip.outbound.departure.city} ⇄ ${roundTrip.outbound.arrival.city}`)
-        roundTripList.push({
-          outbound: roundTrip.outbound,
-          return: roundTrip.return,
-          totalPrice: roundTrip.outbound.price + roundTrip.return.price,
-          route: `${roundTrip.outbound.departure.city} ⇄ ${roundTrip.outbound.arrival.city}`
-        })
-      }
-    })
-    
-    // 处理没有缓存关联的单程行程
-    const singleTrips = trips.filter(trip => !usedTripIds.has(trip.id))
-    
-    // 统一排序的行程列表
+    // 统一排序的行程列表 - 在筛选模式下都显示为单程行程
     const allItems: Array<{
-      type: 'round' | 'single'
+      type: 'single'
       data: any
       sortDate: Date
     }> = []
     
-    // 添加往返行程
-    roundTripList.forEach(roundTrip => {
-      allItems.push({
-        type: 'round',
-        data: roundTrip,
-        sortDate: new Date(roundTrip.outbound.date)
-      })
-    })
-    
-    // 添加单程行程
-    singleTrips.forEach(trip => {
+    // 将所有筛选后的行程都作为单程行程添加
+    trips.forEach(trip => {
       allItems.push({
         type: 'single',
         data: trip,
@@ -148,11 +92,11 @@ const displayedTrips = computed(() => {
       })
     })
     
-    console.log(`筛选模式：处理完成，往返行程${roundTripList.length}个，单程行程${singleTrips.length}个`)
+    console.log(`筛选模式：处理完成，单程行程${trips.length}个`)
     // 按时间倒序排序（最新的在前面）
     return allItems.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime())
   } else {
-    // 无筛选条件时，直接使用store中已优化的sortedAllTrips
+    // 无筛选条件时，直接使用store中已优化的sortedAllTrips（包含往返行程组合）
     console.log('无筛选：使用store中的sortedAllTrips')
     return tripsStore.sortedAllTrips
   }

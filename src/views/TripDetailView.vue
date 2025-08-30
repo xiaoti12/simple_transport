@@ -5,12 +5,8 @@
       <div class="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
         <button @click="goBack" class="text-blue-500 text-lg">← 返回</button>
         <h1 class="text-xl font-bold text-gray-900">出行详情</h1>
-        <button 
-          v-if="hasChanges || saving || saved" 
-          @click="saveChanges" 
-          class="text-green-500 font-medium" 
-          :disabled="saving || saved"
-        >
+        <button v-if="hasChanges || saving || saved" @click="saveChanges" class="text-green-500 font-medium"
+          :disabled="saving || saved">
           {{ saving ? '保存中...' : (saved ? '已保存' : '保存') }}
         </button>
       </div>
@@ -26,14 +22,15 @@
             <div class="text-2xl font-bold text-gray-800">{{ formatDateShort(trip.date) }}</div>
             <div class="text-sm text-gray-600">{{ formatYear(trip.date) }}</div>
           </div>
-          
+
           <!-- 主要内容 -->
           <div class="flex-1 p-4 relative">
             <!-- 价格 -->
             <div class="absolute top-4 right-4 bg-blue-500 text-white px-3 py-2 rounded-full text-sm font-semibold">
-              ¥<span class="editable-field inline-block min-w-[50px]" @click="startEdit('price', $event)">{{ trip.price }}</span>
+              ¥<span class="editable-field inline-block min-w-[50px]" @click="startEdit('price', $event)">{{ trip.price
+              }}</span>
             </div>
-            
+
             <!-- 航空公司信息 -->
             <div class="flex items-center gap-3 mb-4">
               <div class="airline-logo" :style="{ background: getAirlineColor() }">
@@ -48,43 +45,43 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- 航线信息 -->
             <div class="space-y-3">
               <!-- 出发 -->
               <div class="flex items-center gap-3">
                 <div class="route-indicator departure"></div>
                 <div class="flex items-center gap-4 flex-1">
-                  <div class="text-xl font-bold text-gray-800 min-w-[60px] editable-field" 
-                       @click="startEdit('departure.time', $event)">
+                  <div class="text-xl font-bold text-gray-800 min-w-[60px] editable-field"
+                    @click="startEdit('departure.time', $event)">
                     {{ formatTime(trip.departure.time) }}
                   </div>
                   <div class="text-gray-800">
                     <span class="font-medium editable-field" @click="startEdit('departure.city', $event)">
                       {{ trip.departure.city }}
                     </span>
-                    <span class="text-gray-600 text-sm ml-2 editable-field" 
-                          @click="startEdit('departure.station', $event)">
+                    <span class="text-gray-600 text-sm ml-2 editable-field"
+                      @click="startEdit('departure.station', $event)">
                       {{ getTerminalInfo(trip.departure.station) }}
                     </span>
                   </div>
                 </div>
               </div>
-              
+
               <!-- 到达 -->
               <div class="flex items-center gap-3">
                 <div class="route-indicator arrival"></div>
                 <div class="flex items-center gap-4 flex-1">
-                  <div class="text-xl font-bold text-gray-800 min-w-[60px] editable-field" 
-                       @click="startEdit('arrival.time', $event)">
+                  <div class="text-xl font-bold text-gray-800 min-w-[60px] editable-field"
+                    @click="startEdit('arrival.time', $event)">
                     {{ formatTime(trip.arrival.time) }}
                   </div>
                   <div class="text-gray-800">
                     <span class="font-medium editable-field" @click="startEdit('arrival.city', $event)">
                       {{ trip.arrival.city }}
                     </span>
-                    <span class="text-gray-600 text-sm ml-2 editable-field" 
-                          @click="startEdit('arrival.station', $event)">
+                    <span class="text-gray-600 text-sm ml-2 editable-field"
+                      @click="startEdit('arrival.station', $event)">
                       {{ getTerminalInfo(trip.arrival.station) }}
                     </span>
                   </div>
@@ -94,21 +91,20 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 详细信息 -->
       <div class="space-y-4">
         <!-- 出行日期 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="text-sm text-gray-600 mb-2">出行日期</div>
-          <input type="date" v-model="trip.date" @change="markChanged" 
-                 class="w-full p-2 border border-gray-300 rounded-lg">
+          <input type="date" v-model="trip.date" @change="markChanged"
+            class="w-full p-2 border border-gray-300 rounded-lg">
         </div>
-        
+
         <!-- 出行类型 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="text-sm text-gray-600 mb-2">出行方式</div>
-          <select v-model="trip.type" @change="markChanged" 
-                  class="w-full p-2 border border-gray-300 rounded-lg">
+          <select v-model="trip.type" @change="markChanged" class="w-full p-2 border border-gray-300 rounded-lg">
             <option value="flight">飞机</option>
             <option value="train">火车</option>
           </select>
@@ -120,20 +116,15 @@
           <div v-if="trip.travelers && trip.travelers.length > 0" class="space-y-2">
             <!-- 当前出行人显示 -->
             <div class="flex flex-wrap gap-2 mb-3">
-              <span 
-                v-for="traveler in trip.travelers" 
-                :key="traveler"
-                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200"
-              >
+              <span v-for="traveler in trip.travelers" :key="traveler"
+                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200">
                 👤 {{ traveler }}
               </span>
             </div>
-            
+
             <!-- 编辑出行人按钮 -->
-            <button 
-              @click="showTravelersEditor = !showTravelersEditor"
-              class="text-sm text-blue-600 hover:text-blue-800 font-medium"
-            >
+            <button @click="showTravelersEditor = !showTravelersEditor"
+              class="text-sm text-blue-600 hover:text-blue-800 font-medium">
               {{ showTravelersEditor ? '取消编辑' : '编辑出行人' }}
             </button>
 
@@ -142,24 +133,13 @@
               <div class="text-sm text-gray-600 mb-2">选择出行人：</div>
               <div class="space-y-2">
                 <div class="flex flex-wrap gap-2">
-                  <label 
-                    v-for="traveler in tripsStore.travelerConfig.availableTravelers" 
-                    :key="traveler"
-                    class="flex items-center cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      v-model="selectedTravelers"
-                      :value="traveler"
-                      @change="updateTravelers"
-                      class="sr-only"
-                    />
-                    <div 
-                      class="px-3 py-2 rounded-lg border-2 text-sm transition-colors"
-                      :class="selectedTravelers.includes(traveler) 
-                        ? 'border-blue-500 bg-blue-50 text-blue-700' 
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300'"
-                    >
+                  <label v-for="traveler in tripsStore.travelerConfig.availableTravelers" :key="traveler"
+                    class="flex items-center cursor-pointer">
+                    <input type="checkbox" v-model="selectedTravelers" :value="traveler" @change="updateTravelers"
+                      class="sr-only" />
+                    <div class="px-3 py-2 rounded-lg border-2 text-sm transition-colors" :class="selectedTravelers.includes(traveler)
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300'">
                       <span class="mr-1">{{ selectedTravelers.includes(traveler) ? '✓' : '' }}</span>
                       {{ traveler }}
                     </div>
@@ -175,15 +155,118 @@
             未设置出行人信息
           </div>
         </div>
-        
+
+        <!-- 关联往返行程信息 -->
+        <div v-if="linkedTrip" class="bg-white rounded-lg p-4 shadow-sm border-l-4 border-blue-400">
+          <div class="text-sm text-gray-600 mb-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span>🔗</span>
+              <span>关联{{ isOutbound ? '返程' : '去程' }}信息</span>
+            </div>
+            <button @click="showLinkManagement = !showLinkManagement"
+              class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 rounded border border-blue-300 hover:border-blue-500 transition-colors">
+              {{ showLinkManagement ? '取消' : '管理' }}
+            </button>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-3">
+            <!-- 关联行程卡片 -->
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-3">
+                <div class="airline-logo-small" :style="{ background: getLinkedAirlineColor() }">
+                  {{ getLinkedAirlineShort() }}
+                </div>
+                <div>
+                  <div class="text-sm font-medium text-gray-800">
+                    {{ linkedTrip.airline || (linkedTrip.type === 'flight' ? '航空公司' : '铁路公司') }}
+                  </div>
+                  <div class="text-xs text-gray-600">
+                    {{ linkedTrip.flightNumber || (linkedTrip.type === 'flight' ? '航班号' : '车次号') }}
+                  </div>
+                </div>
+              </div>
+              <div class="text-sm font-semibold text-blue-600">
+                ¥{{ linkedTrip.price }}
+              </div>
+            </div>
+
+            <!-- 出发到达信息 -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">出发</span>
+                <div class="text-right">
+                  <div class="font-medium">{{ formatTime(linkedTrip.departure.time) }}</div>
+                  <div class="text-xs text-gray-600">
+                    {{ linkedTrip.departure.city }} {{ getTerminalInfo(linkedTrip.departure.station) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">到达</span>
+                <div class="text-right">
+                  <div class="font-medium">{{ formatTime(linkedTrip.arrival.time) }}</div>
+                  <div class="text-xs text-gray-600">
+                    {{ linkedTrip.arrival.city }} {{ getTerminalInfo(linkedTrip.arrival.station) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">日期</span>
+                <div class="font-medium">{{ linkedTrip.date }}</div>
+              </div>
+            </div>
+
+            <!-- 关联管理操作 -->
+            <div v-if="showLinkManagement" class="mt-3 pt-3 border-t border-gray-200">
+              <div class="space-y-2">
+                <button @click="unlinkTrip"
+                  class="w-full py-2 px-3 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors">
+                  ❌ 取消关联
+                </button>
+                <button @click="showChangeLinkDialog = true"
+                  class="w-full py-2 px-3 bg-yellow-50 text-yellow-600 rounded-lg text-sm font-medium hover:bg-yellow-100 transition-colors">
+                  🔄 修改关联
+                </button>
+              </div>
+            </div>
+
+            <!-- 关联提示信息 -->
+            <div v-else class="mt-3 pt-3 border-t border-gray-200 text-center">
+              <div class="text-xs text-gray-500">
+                这是{{ isOutbound ? '去程' : '返程' }}行程，上方显示了对应的{{ isOutbound ? '返程' : '去程' }}信息
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 添加关联行程（当没有关联时显示） -->
+        <div v-else-if="availableTripsForLinking.length > 0"
+          class="bg-white rounded-lg p-4 shadow-sm border-l-4 border-green-400">
+          <div class="text-sm text-gray-600 mb-3 flex items-center gap-2">
+            <span>➕</span>
+            <span>添加往返关联</span>
+          </div>
+
+          <div class="text-xs text-gray-500 mb-3">
+            发现 {{ availableTripsForLinking.length }} 个可关联的行程（30天内相同路线）
+          </div>
+
+          <button @click="showAddLinkDialog = true"
+            class="w-full py-2 px-3 bg-green-50 text-green-600 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors">
+            🔗 选择关联行程
+          </button>
+        </div>
+
         <!-- 备注信息 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="text-sm text-gray-600 mb-2">备注</div>
-          <textarea v-model="notes" @input="markChanged" 
-                    class="w-full p-2 border border-gray-300 rounded-lg resize-none" 
-                    rows="3" placeholder="添加备注信息..."></textarea>
+          <textarea v-model="notes" @input="markChanged"
+            class="w-full p-2 border border-gray-300 rounded-lg resize-none" rows="3"
+            placeholder="添加备注信息..."></textarea>
         </div>
-        
+
         <!-- 创建时间 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="text-sm text-gray-600 mb-2">创建时间</div>
@@ -191,15 +274,11 @@
             {{ formatDateTime(trip.createdAt) }}
           </div>
         </div>
-        
+
         <!-- 危险操作区域 -->
         <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 border-red-400">
           <div class="text-sm text-gray-600 mb-3">危险操作</div>
-          <button 
-            @click="confirmDeleteTrip" 
-            class="delete-trip-btn"
-            title="删除这条出行记录"
-          >
+          <button @click="confirmDeleteTrip" class="delete-trip-btn" title="删除这条出行记录">
             🗑️ 删除出行记录
           </button>
           <div class="text-xs text-gray-500 mt-2">删除后无法恢复，请谨慎操作</div>
@@ -216,6 +295,45 @@
     <button class="fab-button" @click="showMoreOptions" title="更多选项">
       ⋯
     </button>
+
+    <!-- 选择关联行程弹窗 -->
+    <div v-if="showAddLinkDialog || showChangeLinkDialog"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+      <div class="bg-white rounded-lg p-4 w-full max-w-sm max-h-96 overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">{{ showChangeLinkDialog ? '修改关联行程' : '选择关联行程' }}</h3>
+          <button @click="closeAllDialogs" class="text-gray-500 hover:text-gray-700 text-xl">
+            ✕
+          </button>
+        </div>
+
+        <div v-if="availableTripsForLinking.length === 0" class="text-center py-8 text-gray-500">
+          没有找到可关联的行程
+        </div>
+
+        <div v-else class="space-y-2">
+          <div v-for="availableTrip in availableTripsForLinking" :key="availableTrip.id"
+            @click="selectTripForLinking(availableTrip.id)"
+            class="p-3 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors">
+            <div class="flex items-center justify-between mb-2">
+              <div class="text-sm font-medium">
+                {{ availableTrip.date }} ({{ formatDateDisplay(availableTrip.date) }})
+              </div>
+              <div class="text-xs text-gray-500">
+                {{ availableTrip.type === 'flight' ? '✈️' : '🚄' }}
+              </div>
+            </div>
+            <div class="text-xs text-gray-600">
+              <div>{{ availableTrip.departure.city }} → {{ availableTrip.arrival.city }}</div>
+              <div v-if="availableTrip.flightNumber" class="mt-1">{{ availableTrip.flightNumber }}</div>
+            </div>
+            <div class="text-xs text-blue-600 font-medium mt-1">
+              ¥{{ availableTrip.price }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -238,20 +356,39 @@ const isEditing = ref(false)
 const isInitialized = ref(false)
 const showTravelersEditor = ref(false)
 const selectedTravelers = ref<string[]>([])
+const showLinkManagement = ref(false)
+const showAddLinkDialog = ref(false)
+const showChangeLinkDialog = ref(false)
 
+// 计算关联的往返行程
+const linkedTrip = computed(() => {
+  if (!trip.value?.roundTrip) return null
+  return tripsStore.getTripById(trip.value.roundTrip.linkedTripId)
+})
+
+// 当前行程是否为去程
+const isOutbound = computed(() => {
+  return trip.value?.roundTrip?.type === 'outbound'
+})
+
+// 获取可关联的行程列表
+const availableTripsForLinking = computed(() => {
+  if (!trip.value) return []
+  return tripsStore.getAvailableTripsForLinking(trip.value.id)
+})
 
 onMounted(async () => {
   // 确保页面滚动到顶部
   await nextTick()
   window.scrollTo(0, 0)
-  
+
   const tripId = route.params.id as string
   if (tripId) {
     const foundTrip = tripsStore.getTripById(tripId)
     if (foundTrip) {
       trip.value = { ...foundTrip }
       notes.value = (foundTrip as any).notes || ''
-      
+
       // 初始化出行人选择，兼容旧数据
       if (foundTrip.travelers && Array.isArray(foundTrip.travelers)) {
         selectedTravelers.value = [...foundTrip.travelers]
@@ -260,7 +397,7 @@ onMounted(async () => {
         selectedTravelers.value = ['我']
         trip.value.travelers = ['我']
       }
-      
+
       // 延迟标记为已初始化，避免初始赋值触发 markChanged
       setTimeout(() => {
         isInitialized.value = true
@@ -292,10 +429,10 @@ function formatYear(dateStr: string) {
 function formatTime(timeStr: string) {
   if (timeStr.includes('T')) {
     const date = new Date(timeStr)
-    return date.toLocaleTimeString('zh-CN', { 
-      hour: '2-digit', 
+    return date.toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
       minute: '2-digit',
-      hour12: false 
+      hour12: false
     })
   }
   return timeStr
@@ -317,7 +454,7 @@ function getAirlineColor() {
 function getAirlineShort() {
   if (!trip.value) return '✈️'
   if (trip.value.type === 'train') return '🚄'
-  
+
   if (trip.value.airline) {
     const airlineNames: Record<string, string> = {
       '中国国际航空': '国',
@@ -337,25 +474,25 @@ function getAirlineShort() {
       '九元航空': '九',
       '联合航空': '联'
     }
-    
+
     for (const [airline, shortName] of Object.entries(airlineNames)) {
       if (trip.value.airline.includes(airline.slice(-3))) {
         return shortName
       }
     }
-    
+
     const firstChar = trip.value.airline.charAt(0)
     if (/[\u4e00-\u9fff]/.test(firstChar)) {
       return firstChar
     }
   }
-  
+
   return '✈️'
 }
 
 function getTerminalInfo(station: string) {
   const cityPrefixes = ['北京', '上海', '重庆', '广州', '深圳', '成都', '杭州', '西安', '南京', '武汉', '天津', '苏州']
-  
+
   let cleanStation = station
   for (const city of cityPrefixes) {
     if (station.startsWith(city)) {
@@ -363,42 +500,42 @@ function getTerminalInfo(station: string) {
       break
     }
   }
-  
+
   return cleanStation || ''
 }
 
 function startEdit(field: string, event: Event) {
   if (isEditing.value) return
-  
+
   const element = event.target as HTMLElement
   const currentValue = element.textContent || ''
-  
+
   isEditing.value = true
   element.classList.add('editing')
-  
+
   const input = document.createElement('input')
   input.type = 'text'
   input.value = currentValue
   input.className = 'edit-input'
-  
+
   element.innerHTML = ''
   element.appendChild(input)
-  
+
   input.focus()
   input.select()
-  
+
   const finishEdit = () => {
     const newValue = input.value.trim()
     if (newValue && newValue !== currentValue) {
       updateTripField(field, newValue)
       markChanged()
     }
-    
+
     element.textContent = newValue || currentValue
     element.classList.remove('editing')
     isEditing.value = false
   }
-  
+
   input.addEventListener('blur', finishEdit)
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
@@ -413,17 +550,17 @@ function startEdit(field: string, event: Event) {
 
 function updateTripField(field: string, value: string) {
   if (!trip.value) return
-  
+
   if (field.includes('.')) {
     const [section, subField] = field.split('.')
     if (section === 'departure' || section === 'arrival') {
-      ;(trip.value[section] as any)[subField] = value
+      ; (trip.value[section] as any)[subField] = value
     }
   } else {
     if (field === 'price') {
-      ;(trip.value as any)[field] = parseInt(value) || 0
+      ; (trip.value as any)[field] = parseInt(value) || 0
     } else {
-      ;(trip.value as any)[field] = value
+      ; (trip.value as any)[field] = value
     }
   }
 }
@@ -436,7 +573,7 @@ function markChanged() {
 
 function updateTravelers() {
   if (!trip.value) return
-  
+
   // 确保至少选择一个出行人
   let travelers = [...selectedTravelers.value]
   if (travelers.length === 0) {
@@ -444,28 +581,28 @@ function updateTravelers() {
     travelers = ['我']
     selectedTravelers.value = travelers
   }
-  
+
   trip.value.travelers = travelers
   markChanged()
 }
 
 async function saveChanges() {
   if (!trip.value || !hasChanges.value || saving.value) return
-  
+
   saving.value = true
-  
+
   try {
     // 添加备注字段
     const tripToSave = {
       ...trip.value,
       notes: notes.value
     }
-    
+
     await tripsStore.updateTrip(tripToSave)
     hasChanges.value = false
     saving.value = false
     saved.value = true
-    
+
     // 1.5秒后隐藏"已保存"按钮
     setTimeout(() => {
       saved.value = false
@@ -488,24 +625,143 @@ function goBack() {
 
 function confirmDeleteTrip() {
   if (!trip.value) return
-  
+
   const confirmed = confirm(`确定要删除这条出行记录吗？\n\n出发: ${trip.value.departure.city} → ${trip.value.arrival.city}\n日期: ${trip.value.date}\n\n此操作无法撤销！`)
-  
+
   if (confirmed) {
     tripsStore.deleteTrip(trip.value.id)
     router.push('/')
   }
 }
 
+// 获取关联行程的航空公司颜色
+function getLinkedAirlineColor() {
+  if (!linkedTrip.value) return '#667eea'
+  if (linkedTrip.value.type === 'train') {
+    return '#28a745'
+  }
+  return '#667eea'
+}
+
+// 获取关联行程的航空公司简称
+function getLinkedAirlineShort() {
+  if (!linkedTrip.value) return '✈️'
+  if (linkedTrip.value.type === 'train') return '🚄'
+
+  if (linkedTrip.value.airline) {
+    const airlineNames: Record<string, string> = {
+      '中国国际航空': '国',
+      '中国东方航空': '东',
+      '中国南方航空': '南',
+      '海南航空': '海',
+      '深圳航空': '深',
+      '四川航空': '川',
+      '厦门航空': '厦',
+      '春秋航空': '春',
+      '吉祥航空': '吉',
+      '山东航空': '鲁',
+      '天津航空': '津',
+      '首都航空': '首',
+      '西部航空': '西',
+      '祥鹏航空': '祥',
+      '九元航空': '九',
+      '联合航空': '联'
+    }
+
+    for (const [airline, shortName] of Object.entries(airlineNames)) {
+      if (linkedTrip.value.airline.includes(airline.slice(-3))) {
+        return shortName
+      }
+    }
+
+    const firstChar = linkedTrip.value.airline.charAt(0)
+    if (/[\u4e00-\u9fff]/.test(firstChar)) {
+      return firstChar
+    }
+  }
+
+  return '✈️'
+}
+
+// 取消关联
+function unlinkTrip() {
+  if (!trip.value?.id) return
+
+  if (confirm('确定要取消往返关联吗？取消后两个行程将独立显示。')) {
+    tripsStore.clearTripRoundTripLink(trip.value.id)
+    
+    // 暂时禁用监听器
+    isInitialized.value = false
+    
+    // 重新加载当前行程数据以反映关联更改
+    const updatedTrip = tripsStore.getTripById(trip.value.id)
+    if (updatedTrip) {
+      trip.value = { ...updatedTrip }
+      notes.value = (updatedTrip as any).notes || ''
+    }
+    
+    // 重新启用监听器，但不触发change状态
+    setTimeout(() => {
+      isInitialized.value = true
+      hasChanges.value = false
+    }, 0)
+    
+    showLinkManagement.value = false
+  }
+}
+
+// 选择行程进行关联
+function selectTripForLinking(targetTripId: string) {
+  if (!trip.value?.id) return
+
+  const success = tripsStore.linkTrips(trip.value.id, targetTripId)
+
+  if (success) {
+    // 暂时禁用监听器
+    isInitialized.value = false
+    
+    // 重新加载当前行程数据以反映关联更改
+    const updatedTrip = tripsStore.getTripById(trip.value.id)
+    if (updatedTrip) {
+      trip.value = { ...updatedTrip }
+      notes.value = (updatedTrip as any).notes || ''
+    }
+
+    // 重新启用监听器，但不触发change状态
+    setTimeout(() => {
+      isInitialized.value = true
+      hasChanges.value = false
+    }, 0)
+
+    closeAllDialogs()
+  } else {
+    alert('关联失败，请重试')
+  }
+}
+
+// 关闭所有弹窗
+function closeAllDialogs() {
+  showAddLinkDialog.value = false
+  showChangeLinkDialog.value = false
+  showLinkManagement.value = false
+}
+
+// 格式化日期显示（周几）
+function formatDateDisplay(dateStr: string) {
+  const date = new Date(dateStr)
+  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  return weekDays[date.getDay()]
+}
+
 function showMoreOptions() {
   const options = [
     '复制出行信息',
-    '分享给朋友', 
+    '分享给朋友',
     '导出为PDF'
   ]
-  
+
   const choice = prompt('选择操作：\n' + options.map((opt, i) => `${i + 1}. ${opt}`).join('\n'))
-  
+
   if (choice) {
     const index = parseInt(choice) - 1
     // 其他功能可以在这里实现
@@ -577,6 +833,19 @@ function showMoreOptions() {
   color: white;
   font-weight: bold;
   font-size: 16px;
+}
+
+.airline-logo-small {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  flex-shrink: 0;
 }
 
 .route-indicator {

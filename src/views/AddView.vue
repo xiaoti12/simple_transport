@@ -377,7 +377,7 @@
                     <input
                       v-model="recognitionResults[selectedResultIndex].departure.time"
                       type="datetime-local"
-                      class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm time-input"
                       required
                     />
                   </div>
@@ -403,7 +403,7 @@
                     <input
                       v-model="recognitionResults[selectedResultIndex].arrival.time"
                       type="datetime-local"
-                      class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm time-input"
                       required
                     />
                   </div>
@@ -645,7 +645,7 @@
                     <input
                       v-model="recognitionResults[selectedResultIndex].departure.time"
                       type="datetime-local"
-                      class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm time-input"
                       required
                     />
                   </div>
@@ -671,7 +671,7 @@
                     <input
                       v-model="recognitionResults[selectedResultIndex].arrival.time"
                       type="datetime-local"
-                      class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm time-input"
                       required
                     />
                   </div>
@@ -1175,16 +1175,23 @@ onUnmounted(() => {
   input[type="datetime-local"] {
     -webkit-appearance: none;
     appearance: none;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   
   /* 日期时间选择器样式优化 */
   input[type="datetime-local"]::-webkit-datetime-edit {
     color: #374151;
     padding: 0;
+    width: 100%;
+    overflow: hidden;
   }
   
   input[type="datetime-local"]::-webkit-datetime-edit-text {
     color: #6b7280;
+    font-size: 14px;
   }
   
   input[type="datetime-local"]::-webkit-datetime-edit-month-field,
@@ -1196,6 +1203,9 @@ onUnmounted(() => {
     border: none;
     outline: none;
     color: #374151;
+    font-size: 14px;
+    min-width: 0;
+    flex-shrink: 1;
   }
   
   input[type="datetime-local"]::-webkit-calendar-picker-indicator {
@@ -1223,6 +1233,19 @@ onUnmounted(() => {
     max-width: 100%;
     padding-left: 12px;
     padding-right: 12px;
+  }
+  
+  /* 时间输入框在小屏幕上的特殊处理 */
+  .grid-cols-2 .time-input {
+    font-size: 13px !important;
+    padding: 8px 6px !important;
+  }
+  
+  /* 减少时间选择器图标的空间占用 */
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    width: 14px !important;
+    height: 14px !important;
+    background-size: 12px 12px !important;
   }
 }
 
@@ -1314,6 +1337,46 @@ input[type="datetime-local"]::-webkit-inner-spin-button,
 input[type="datetime-local"]::-webkit-clear-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+/* 时间输入框在手机端的特殊样式 */
+@media (max-width: 640px) {
+  input[type="datetime-local"].time-input {
+    font-size: 12px !important;
+    padding: 6px 4px !important;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  input[type="datetime-local"].time-input::-webkit-datetime-edit {
+    font-size: 12px;
+    line-height: 1.2;
+    padding: 0;
+    margin: 0;
+  }
+  
+  input[type="datetime-local"].time-input::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+    margin: 0;
+  }
+  
+  input[type="datetime-local"].time-input::-webkit-datetime-edit-text,
+  input[type="datetime-local"].time-input::-webkit-datetime-edit-month-field,
+  input[type="datetime-local"].time-input::-webkit-datetime-edit-day-field,
+  input[type="datetime-local"].time-input::-webkit-datetime-edit-year-field,
+  input[type="datetime-local"].time-input::-webkit-datetime-edit-hour-field,
+  input[type="datetime-local"].time-input::-webkit-datetime-edit-minute-field {
+    font-size: 12px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  input[type="datetime-local"].time-input::-webkit-calendar-picker-indicator {
+    width: 12px !important;
+    height: 12px !important;
+    margin-left: 2px !important;
+  }
 }
 
 /* 确保日期时间选择器在所有浏览器中都有合理的样式 */

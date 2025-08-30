@@ -46,11 +46,6 @@
                 <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                 <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
               </optgroup>
-              <optgroup label="其他模型">
-                <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
-                <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
-              </optgroup>
             </select>
           </div>
 
@@ -115,7 +110,9 @@
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" v-model="webdavConfig.enabled" class="sr-only peer" />
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div
+                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+              </div>
             </label>
           </div>
 
@@ -126,7 +123,9 @@
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" v-model="webdavConfig.useProxy" class="sr-only peer" />
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div
+                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+              </div>
             </label>
           </div>
 
@@ -140,7 +139,6 @@
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 required />
               <p class="text-xs text-gray-500 mt-1">
-                支持各种WebDAV服务，如NextCloud、ownCloud、Koofr等
               </p>
             </div>
 
@@ -160,7 +158,8 @@
                 密码
               </label>
               <div class="relative">
-                <input v-model="webdavConfig.password" :type="showWebdavPassword ? 'text' : 'password'" placeholder="password"
+                <input v-model="webdavConfig.password" :type="showWebdavPassword ? 'text' : 'password'"
+                  placeholder="password"
                   class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   required />
                 <button type="button" @click="showWebdavPassword = !showWebdavPassword"
@@ -206,7 +205,7 @@
               class="bg-orange-600 text-white py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
               {{ isSyncing ? '同步中...' : '⬆️ 上传数据' }}
             </button>
-            
+
             <button @click="downloadFromWebdav" :disabled="!isWebdavConfigValid || isSyncing"
               class="bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
               {{ isSyncing ? '同步中...' : '⬇️ 下载数据' }}
@@ -238,17 +237,11 @@
           <div>
             <h3 class="font-medium mb-2">出行人列表</h3>
             <div class="flex flex-wrap gap-2">
-              <div 
-                v-for="traveler in tripsStore.travelerConfig.availableTravelers" 
-                :key="traveler"
-                class="flex items-center bg-blue-50 border border-blue-200 rounded-lg px-3 py-2"
-              >
+              <div v-for="traveler in tripsStore.travelerConfig.availableTravelers" :key="traveler"
+                class="flex items-center bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
                 <span class="text-sm">{{ traveler }}</span>
-                <button 
-                  v-if="traveler !== '我'" 
-                  @click="removeTraveler(traveler)"
-                  class="ml-2 text-red-500 hover:text-red-700"
-                >
+                <button v-if="traveler !== '我'" @click="removeTraveler(traveler)"
+                  class="ml-2 text-red-500 hover:text-red-700">
                   ×
                 </button>
               </div>
@@ -262,18 +255,11 @@
           <div>
             <h3 class="font-medium mb-2">添加新出行人</h3>
             <div class="flex gap-2">
-              <input 
-                v-model="newTravelerName" 
-                type="text" 
-                placeholder="请输入出行人姓名"
+              <input v-model="newTravelerName" type="text" placeholder="请输入出行人姓名"
                 class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                @keyup.enter="addNewTraveler"
-              />
-              <button 
-                @click="addNewTraveler"
-                :disabled="!newTravelerName.trim()"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-              >
+                @keyup.enter="addNewTraveler" />
+              <button @click="addNewTraveler" :disabled="!newTravelerName.trim()"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
                 添加
               </button>
             </div>
@@ -483,7 +469,7 @@ async function testWebdavConnection() {
 
   try {
     const success = await syncService.testWebDAVConnection()
-    
+
     if (success) {
       webdavTestResult.value = { success: true, message: 'WebDAV连接测试成功!' }
     } else {
@@ -525,7 +511,7 @@ async function downloadFromWebdav() {
   try {
     await syncService.downloadFromWebDAV()
     syncResult.value = { success: true, message: '数据下载成功！页面将刷新以应用新数据' }
-    
+
     setTimeout(() => {
       window.location.reload()
     }, 2000)
@@ -554,7 +540,7 @@ function addNewTraveler() {
 // 删除出行人
 function removeTraveler(name: string) {
   if (name === '我') return
-  
+
   if (confirm(`确定要删除出行人"${name}"吗？`)) {
     tripsStore.removeTraveler(name)
   }

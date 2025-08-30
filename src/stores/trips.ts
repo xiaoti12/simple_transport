@@ -41,32 +41,36 @@ export const useTripsStore = defineStore('trips', () => {
     return result
   })
 
-  // 最多的出行城市统计
-  const mostDepartureCity = computed(() => {
+  // 最多的出行城市统计（TOP 5）
+  const topDepartureCities = computed(() => {
     if (!isLoaded) loadFromStorage()
     const cityStats: Record<string, number> = {}
     trips.value.forEach(trip => {
       const city = trip.departure.city
       cityStats[city] = (cityStats[city] || 0) + 1
     })
-    const sorted = Object.entries(cityStats).sort(([, a], [, b]) => b - a)
-    return sorted.length > 0 ? { city: sorted[0][0], count: sorted[0][1] } : null
+    return Object.entries(cityStats)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([city, count]) => ({ city, count }))
   })
 
-  // 最多的到达城市统计
-  const mostArrivalCity = computed(() => {
+  // 最多的到达城市统计（TOP 5）
+  const topArrivalCities = computed(() => {
     if (!isLoaded) loadFromStorage()
     const cityStats: Record<string, number> = {}
     trips.value.forEach(trip => {
       const city = trip.arrival.city
       cityStats[city] = (cityStats[city] || 0) + 1
     })
-    const sorted = Object.entries(cityStats).sort(([, a], [, b]) => b - a)
-    return sorted.length > 0 ? { city: sorted[0][0], count: sorted[0][1] } : null
+    return Object.entries(cityStats)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([city, count]) => ({ city, count }))
   })
 
-  // 最多的往返行程统计
-  const mostRoundTripRoute = computed(() => {
+  // 最多的往返行程统计（TOP 5）
+  const topRoundTripRoutes = computed(() => {
     if (!isLoaded) loadFromStorage()
     const routeStats: Record<string, number> = {}
     const { roundTrips: roundTripsList } = roundTrips.value
@@ -76,12 +80,14 @@ export const useTripsStore = defineStore('trips', () => {
       routeStats[route] = (routeStats[route] || 0) + 1
     })
     
-    const sorted = Object.entries(routeStats).sort(([, a], [, b]) => b - a)
-    return sorted.length > 0 ? { route: sorted[0][0], count: sorted[0][1] } : null
+    return Object.entries(routeStats)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([route, count]) => ({ route, count }))
   })
 
-  // 最多的航空公司统计
-  const mostAirline = computed(() => {
+  // 最多的航空公司统计（TOP 5）
+  const topAirlines = computed(() => {
     if (!isLoaded) loadFromStorage()
     const airlineStats: Record<string, number> = {}
     trips.value.forEach(trip => {
@@ -90,8 +96,10 @@ export const useTripsStore = defineStore('trips', () => {
         airlineStats[airline] = (airlineStats[airline] || 0) + 1
       }
     })
-    const sorted = Object.entries(airlineStats).sort(([, a], [, b]) => b - a)
-    return sorted.length > 0 ? { airline: sorted[0][0], count: sorted[0][1] } : null
+    return Object.entries(airlineStats)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([airline, count]) => ({ airline, count }))
   })
 
   // 检测往返行程
@@ -688,10 +696,10 @@ export const useTripsStore = defineStore('trips', () => {
     singleTrips,
     sortedAllTrips,
     travelerConfig: getTravelerConfig,
-    mostDepartureCity,
-    mostArrivalCity,
-    mostRoundTripRoute,
-    mostAirline,
+    topDepartureCities,
+    topArrivalCities,
+    topRoundTripRoutes,
+    topAirlines,
     addTrip,
     deleteTrip,
     getTripById,

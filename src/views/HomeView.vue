@@ -40,7 +40,6 @@
           <p class="text-gray-500 mb-4">还没有出行记录</p>
           <div class="space-y-2">
             <RouterLink to="/add" class="block text-blue-500 text-sm">添加第一条记录</RouterLink>
-            <button @click="loadSampleData" class="text-green-500 text-sm">加载示例数据</button>
             <button @click="resetData" class="text-red-500 text-sm">重置数据(调试)</button>
           </div>
         </div>
@@ -125,10 +124,6 @@ const currentTotalSpent = computed(() => {
 function handleFiltersChanged(trips: TripRecord[], hasActiveFilters: boolean) {
   filteredTrips.value = trips
   hasFilters.value = hasActiveFilters
-}
-
-function loadSampleData() {
-  tripsStore.loadSampleData()
 }
 
 function resetData() {

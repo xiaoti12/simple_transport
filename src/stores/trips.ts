@@ -607,23 +607,11 @@ export const useTripsStore = defineStore('trips', () => {
       if (idFixed || needsSave) {
         saveToStorage()
       }
-    } else {
-      // 如果没有存储数据，自动加载示例数据
-      loadSampleData()
     }
 
     isLoaded = true
   }
 
-  async function loadSampleData() {
-    const { sampleTrips } = await import('@/utils/sampleData')
-    trips.value = sampleTrips
-
-    // 立即触发往返行程检测，通过访问computed属性
-    roundTrips.value
-
-    saveToStorage()
-  }
 
   function clearAllTrips() {
     trips.value = []
@@ -659,7 +647,6 @@ export const useTripsStore = defineStore('trips', () => {
     getAvailableTripsForLinking,
     linkTrips,
     loadFromStorage,
-    loadSampleData,
     clearAllTrips,
     saveToStorage,
     fixDuplicateIds,

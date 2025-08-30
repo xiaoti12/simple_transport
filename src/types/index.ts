@@ -23,6 +23,8 @@ export interface TripRecord {
     linkedTripId: string // 关联的往返行程ID
     type: 'outbound' | 'return' // 当前行程在往返中的角色：去程或返程
   }
+  // 用户手动禁止关联的行程ID列表
+  manuallyUnlinkedFrom?: string[]
 }
 
 export interface AIConfig {

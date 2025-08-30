@@ -116,6 +116,12 @@ export const useTripsStore = defineStore('trips', () => {
 
         // 检查是否为往返（A→B 和 B→A）
         if ((departure1 === arrival2 && arrival1 === departure2)) {
+          // 检查是否被用户手动禁止关联
+          if (isManuallyUnlinked(trip1.id, trip2.id)) {
+            console.log(`跳过自动关联: ${trip1.id} <-> ${trip2.id}，用户已手动禁止`)
+            continue
+          }
+
           // 计算时间间隔（以天为单位）
           const date1 = new Date(trip1.date)
           const date2 = new Date(trip2.date)
@@ -229,6 +235,12 @@ export const useTripsStore = defineStore('trips', () => {
 
       // 检查是否为往返（A→B 和 B→A）
       if (newDeparture === existingArrival && newArrival === existingDeparture) {
+        // 检查是否被用户手动禁止关联
+        if (isManuallyUnlinked(newTrip.id, existingTrip.id)) {
+          console.log(`跳过新行程自动关联: ${newTrip.id} <-> ${existingTrip.id}，用户已手动禁止`)
+          continue
+        }
+
         const daysDiff = Math.abs(newDate.getTime() - existingDate.getTime()) / (1000 * 60 * 60 * 24)
 
         if (daysDiff <= 30) {
@@ -347,19 +359,177 @@ export const useTripsStore = defineStore('trips', () => {
     }
   }
 
-  // 清除行程的往返关联信息
+  // 检查两个行程是否被用户手动禁止关联
+  function isManuallyUnlinked(tripId1: string, tripId2: string): boolean {
+    const trip1 = trips.value.find(t => t.id === tripId1)
+    const trip2 = trips.value.find(t => t.id === tripId2)
+
+    return (trip1?.manuallyUnlinkedFrom?.includes(tripId2) ||
+      trip2?.manuallyUnlinkedFrom?.includes(tripId1)) || false
+  }
+
+  // 仅清除往返关联信息，不记录禁止关联
+  function clearTripRoundTripLinkOnly(tripId: string) {
+    const trip = trips.value.find(t => t.id === tripId)
+    if (!trip || !trip.roundTrip) {
+      console.log(`clearTripRoundTripLinkOnly: 行程 ${tripId} 没有关联信息`)
+      return
+    }
+
+    const linkedTripId = trip.roundTrip.linkedTripId
+    const linkedTrip = trips.value.find(t => t.id === linkedTripId)
+
+    console.log(`clearTripRoundTripLinkOnly: 开始清除 ${tripId} <-> ${linkedTripId} 的关联`)
+
+    // 清除双向关联
+    delete trip.roundTrip
+    if (linkedTrip && linkedTrip.roundTrip) {
+      delete linkedTrip.roundTrip
+      console.log(`clearTripRoundTripLinkOnly: 已清除关联行程 ${linkedTripId} 的roundTrip字段`)
+    } else {
+      console.log(`clearTripRoundTripLinkOnly: 关联行程 ${linkedTripId} 没有roundTrip字段或不存在`)
+    }
+
+    console.log(`clearTripRoundTripLinkOnly: 已清除主行程 ${tripId} 的roundTrip字段`)
+  }
+
+  // 清除行程的往返关联信息并记录禁止自动关联
   function clearTripRoundTripLink(tripId: string) {
     const trip = trips.value.find(t => t.id === tripId)
-    if (trip && trip.roundTrip) {
-      // 同时清除关联行程的往返信息
-      const linkedTrip = trips.value.find(t => t.id === trip.roundTrip!.linkedTripId)
-      if (linkedTrip) {
-        delete linkedTrip.roundTrip
-      }
-      delete trip.roundTrip
-      // 立即保存到localStorage
-      saveToStorage()
+    if (!trip || !trip.roundTrip) {
+      console.log(`clearTripRoundTripLink: 行程 ${tripId} 没有关联信息`)
+      return
     }
+
+    const linkedTripId = trip.roundTrip.linkedTripId
+    const linkedTrip = trips.value.find(t => t.id === linkedTripId)
+
+    console.log(`clearTripRoundTripLink: 开始处理用户手动解除关联 ${tripId} <-> ${linkedTripId}`)
+
+    // 1. 先清除双向关联
+    delete trip.roundTrip
+    if (linkedTrip && linkedTrip.roundTrip) {
+      delete linkedTrip.roundTrip
+    }
+    console.log(`clearTripRoundTripLink: 已清除双向roundTrip字段`)
+
+    // 2. 记录用户手动禁止关联信息
+    if (!trip.manuallyUnlinkedFrom) {
+      trip.manuallyUnlinkedFrom = []
+    }
+    if (!trip.manuallyUnlinkedFrom.includes(linkedTripId)) {
+      trip.manuallyUnlinkedFrom.push(linkedTripId)
+    }
+
+    if (linkedTrip) {
+      if (!linkedTrip.manuallyUnlinkedFrom) {
+        linkedTrip.manuallyUnlinkedFrom = []
+      }
+      if (!linkedTrip.manuallyUnlinkedFrom.includes(tripId)) {
+        linkedTrip.manuallyUnlinkedFrom.push(tripId)
+      }
+    }
+
+    console.log(`clearTripRoundTripLink: 已记录禁止自动关联信息`)
+
+    // 3. 验证最终状态
+    console.log(`clearTripRoundTripLink: 验证最终状态:`, {
+      trip1: {
+        id: tripId,
+        hasRoundTrip: !!trip.roundTrip,
+        manuallyUnlinkedFrom: trip.manuallyUnlinkedFrom || []
+      },
+      trip2: linkedTrip ? {
+        id: linkedTripId,
+        hasRoundTrip: !!linkedTrip.roundTrip,
+        manuallyUnlinkedFrom: linkedTrip.manuallyUnlinkedFrom || []
+      } : '不存在'
+    })
+
+    // 4. 立即保存到localStorage
+    saveToStorage()
+    console.log(`clearTripRoundTripLink: 完成处理并保存`)
+  }
+
+  // 获取指定行程在指定天数范围内的可关联行程列表
+  function getAvailableTripsForLinking(tripId: string, dayRange: number = 30) {
+    const currentTrip = trips.value.find(t => t.id === tripId)
+    if (!currentTrip) return []
+
+    const currentDate = new Date(currentTrip.date)
+    const currentDeparture = currentTrip.departure.city
+    const currentArrival = currentTrip.arrival.city
+
+    const availableTrips = trips.value.filter(trip => {
+      // 排除自己
+      if (trip.id === tripId) return false
+
+      // 排除已经有关联的行程
+      if (trip.roundTrip) return false
+
+      // 检查时间范围（前后30天）
+      const tripDate = new Date(trip.date)
+      const daysDiff = Math.abs(tripDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
+      if (daysDiff > dayRange) return false
+
+      // 检查是否为往返路线（A→B 和 B→A）
+      const tripDeparture = trip.departure.city
+      const tripArrival = trip.arrival.city
+
+      return (currentDeparture === tripArrival && currentArrival === tripDeparture)
+    }).sort((a, b) => {
+      // 按时间排序
+      return new Date(a.date).getTime() - new Date(b.date).getTime()
+    })
+
+    return availableTrips
+  }
+
+  // 建立两个行程之间的往返关联
+  function linkTrips(trip1Id: string, trip2Id: string) {
+    const trip1 = trips.value.find(t => t.id === trip1Id)
+    const trip2 = trips.value.find(t => t.id === trip2Id)
+
+    if (!trip1 || !trip2) {
+      console.error('无法找到要关联的行程')
+      return false
+    }
+
+    // 清除现有关联（不记录禁止信息，因为用户要重新关联）
+    if (trip1.roundTrip) clearTripRoundTripLinkOnly(trip1Id)
+    if (trip2.roundTrip) clearTripRoundTripLinkOnly(trip2Id)
+
+    // 清除之前的手动禁止关联记录（用户现在手动选择要关联了）
+    if (trip1.manuallyUnlinkedFrom) {
+      const index1 = trip1.manuallyUnlinkedFrom.indexOf(trip2Id)
+      if (index1 > -1) {
+        trip1.manuallyUnlinkedFrom.splice(index1, 1)
+      }
+    }
+    if (trip2.manuallyUnlinkedFrom) {
+      const index2 = trip2.manuallyUnlinkedFrom.indexOf(trip1Id)
+      if (index2 > -1) {
+        trip2.manuallyUnlinkedFrom.splice(index2, 1)
+      }
+    }
+
+    // 确定去程和返程
+    const date1 = new Date(trip1.date)
+    const date2 = new Date(trip2.date)
+    const isTrip1Earlier = date1 <= date2
+
+    const outboundTrip = isTrip1Earlier ? trip1 : trip2
+    const returnTrip = isTrip1Earlier ? trip2 : trip1
+
+    // 建立双向关联
+    updateTripRoundTripLinkBatch(outboundTrip.id, returnTrip.id, 'outbound')
+    updateTripRoundTripLinkBatch(returnTrip.id, outboundTrip.id, 'return')
+
+    // 保存
+    saveToStorage()
+
+    console.log(`用户手动建立往返关联: ${outboundTrip.departure.city} ⇄ ${outboundTrip.arrival.city} (去程:${outboundTrip.date}, 返程:${returnTrip.date})`)
+    return true
   }
 
   function updateTravelerList(travelers: string[]) {
@@ -372,6 +542,7 @@ export const useTripsStore = defineStore('trips', () => {
     travelerConfig.value.availableTravelers = travelers
     saveToStorage()
   }
+
 
   // 修复重复ID的函数，返回是否有变化
   function fixDuplicateIds(): boolean {
@@ -485,6 +656,8 @@ export const useTripsStore = defineStore('trips', () => {
     updateTravelerList,
     updateTripRoundTripLink,
     clearTripRoundTripLink,
+    getAvailableTripsForLinking,
+    linkTrips,
     loadFromStorage,
     loadSampleData,
     clearAllTrips,

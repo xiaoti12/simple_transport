@@ -46,11 +46,6 @@
                 <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                 <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
               </optgroup>
-              <optgroup label="其他模型">
-                <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
-                <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
-              </optgroup>
             </select>
           </div>
 
@@ -144,8 +139,6 @@
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 required />
               <p class="text-xs text-gray-500 mt-1">
-                支持各种WebDAV服务，如NextCloud、ownCloud、Koofr等
-                支持各种WebDAV服务，如NextCloud、ownCloud、Koofr等
               </p>
             </div>
 
@@ -212,6 +205,7 @@
               class="bg-orange-600 text-white py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
               {{ isSyncing ? '同步中...' : '⬆️ 上传数据' }}
             </button>
+
 
             <button @click="downloadFromWebdav" :disabled="!isWebdavConfigValid || isSyncing"
               class="bg-purple-600 text-white py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">

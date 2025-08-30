@@ -65,7 +65,7 @@
       <div class="bg-white rounded-lg p-4 shadow-sm">
         <h2 class="text-lg font-medium mb-4">月度花费趋势</h2>
         <div class="space-y-2">
-          <div v-for="(monthData, month) in monthlyStats" :key="month" class="flex items-center justify-between py-2">
+          <div v-for="(monthData, month) in displayedMonthlyStats" :key="month" class="flex items-center justify-between py-2">
             <span class="text-sm text-gray-600">{{ month }}</span>
             <div class="flex items-center">
               <div class="w-24 bg-gray-200 rounded-full h-2 mr-3">
@@ -78,6 +78,16 @@
               <span class="text-xs text-gray-400 w-8 text-right">({{ monthData.count }})</span>
             </div>
           </div>
+        </div>
+        
+        <!-- 展开/收起按钮 -->
+        <div v-if="shouldShowToggleButton" class="mt-4 text-center">
+          <button 
+            @click="showAllMonths = !showAllMonths"
+            class="text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-blue-50"
+          >
+            {{ showAllMonths ? '收起' : `查看全部 ${totalMonthsCount} 个月` }}
+          </button>
         </div>
       </div>
 
@@ -102,11 +112,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useTripsStore } from '@/stores/trips'
 import BottomNavigation from '@/components/BottomNavigation.vue'
 
 const tripsStore = useTripsStore()
+
+// 控制月度显示数量
+const showAllMonths = ref(false)
+const defaultDisplayCount = 6
 
 const trainPercentage = computed(() => {
   const total = tripsStore.trips.length
@@ -148,10 +162,21 @@ const monthlyStats = computed(() => {
   return sortedStats
 })
 
+const displayedMonthlyStats = computed(() => {
+  const entries = Object.entries(monthlyStats.value)
+  if (!showAllMonths.value && entries.length > defaultDisplayCount) {
+    return Object.fromEntries(entries.slice(0, defaultDisplayCount))
+  }
+  return monthlyStats.value
+})
+
 const maxMonthlyAmount = computed(() => {
   const amounts = Object.values(monthlyStats.value).map(data => data.amount)
   return amounts.length > 0 ? Math.max(...amounts) : 0
 })
+
+const totalMonthsCount = computed(() => Object.keys(monthlyStats.value).length)
+const shouldShowToggleButton = computed(() => totalMonthsCount.value > defaultDisplayCount)
 
 const averagePrice = computed(() => {
   if (tripsStore.trips.length === 0) return 0

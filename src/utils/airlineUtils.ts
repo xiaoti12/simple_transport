@@ -7,26 +7,58 @@ import hainanIcon from '@/assets/airlines/hainan.png'
 import hebeiIcon from '@/assets/airlines/hebei.png'
 import southernIcon from '@/assets/airlines/southern.png'
 
-// 航空公司图标映射
+// 航空公司别名映射表（将各种别名统一映射到标准名称）
+const AIRLINE_ALIAS_MAP: Record<string, string> = {
+  // 中国南方航空
+  '南航': '中国南方航空',
+  '南方航空': '中国南方航空',
+  // 中国国际航空
+  '国航': '中国国际航空',
+  '中国国航': '中国国际航空',
+  '国际航空': '中国国际航空',
+  // 中国东方航空
+  '东航': '中国东方航空',
+  '东方航空': '中国东方航空',
+}
+
+/**
+ * 规范化航空公司名称
+ * 将各种别名/简称统一转换为标准全称
+ * @param airlineName 原始航空公司名称
+ * @returns 规范化后的航空公司名称
+ */
+export function normalizeAirlineName(airlineName: string): string {
+  if (!airlineName) return airlineName
+
+  // 直接匹配别名表
+  if (AIRLINE_ALIAS_MAP[airlineName]) {
+    return AIRLINE_ALIAS_MAP[airlineName]
+  }
+
+  // 模糊匹配（检查名称中是否包含别名）
+  for (const [alias, standardName] of Object.entries(AIRLINE_ALIAS_MAP)) {
+    if (airlineName.includes(alias)) {
+      return standardName
+    }
+  }
+
+  return airlineName
+}
+
+// 航空公司图标映射（使用标准名称）
 const AIRLINE_ICONS: Record<string, string> = {
   '中国国际航空': airChinaIcon,
-  '国际航空': airChinaIcon,
   '中国东方航空': easternIcon,
-  '东方航空': easternIcon,
   '海南航空': hainanIcon,
   '河北航空': hebeiIcon,
   '中国南方航空': southernIcon,
-  '南方航空': southernIcon,
 }
 
-// 航空公司简称映射（作为fallback）
+// 航空公司简称映射（作为fallback，使用标准名称）
 const AIRLINE_SHORTS: Record<string, string> = {
   '中国国际航空': '国',
-  '国际航空': '国',
   '中国东方航空': '东',
-  '东方航空': '东',
   '中国南方航空': '南',
-  '南方航空': '南',
   '海南航空': '海',
   '深圳航空': '深',
   '四川航空': '川',
@@ -50,20 +82,23 @@ const AIRLINE_SHORTS: Record<string, string> = {
  */
 export function getAirlineIcon(airlineName: string): string | null {
   if (!airlineName) return null
-  
+
+  // 先规范化名称
+  const normalizedName = normalizeAirlineName(airlineName)
+
   // 直接匹配完整名称
-  if (AIRLINE_ICONS[airlineName]) {
-    return AIRLINE_ICONS[airlineName]
+  if (AIRLINE_ICONS[normalizedName]) {
+    return AIRLINE_ICONS[normalizedName]
   }
-  
+
   // 模糊匹配（包含关键字）- 优先匹配更具体的名称
   const sortedAirlines = Object.entries(AIRLINE_ICONS).sort((a, b) => b[0].length - a[0].length)
   for (const [airline, icon] of sortedAirlines) {
-    if (airlineName.includes(airline)) {
+    if (normalizedName.includes(airline)) {
       return icon
     }
   }
-  
+
   return null
 }
 
@@ -74,26 +109,29 @@ export function getAirlineIcon(airlineName: string): string | null {
  */
 export function getAirlineShort(airlineName: string): string {
   if (!airlineName) return '✈️'
-  
+
+  // 先规范化名称
+  const normalizedName = normalizeAirlineName(airlineName)
+
   // 直接匹配完整名称
-  if (AIRLINE_SHORTS[airlineName]) {
-    return AIRLINE_SHORTS[airlineName]
+  if (AIRLINE_SHORTS[normalizedName]) {
+    return AIRLINE_SHORTS[normalizedName]
   }
-  
+
   // 模糊匹配 - 优先匹配更具体的名称
   const sortedShorts = Object.entries(AIRLINE_SHORTS).sort((a, b) => b[0].length - a[0].length)
   for (const [airline, shortName] of sortedShorts) {
-    if (airlineName.includes(airline)) {
+    if (normalizedName.includes(airline)) {
       return shortName
     }
   }
-  
+
   // 如果没有匹配到，返回第一个汉字
-  const firstChar = airlineName.charAt(0)
+  const firstChar = normalizedName.charAt(0)
   if (/[\u4e00-\u9fff]/.test(firstChar)) {
     return firstChar
   }
-  
+
   return '✈️'
 }
 
@@ -104,25 +142,31 @@ export function getAirlineShort(airlineName: string): string {
  */
 export function getAirlineColor(airlineName?: string): string {
   if (!airlineName) return '#667eea'
-  
-  // 根据航空公司返回特定颜色
+
+  // 先规范化名称
+  const normalizedName = normalizeAirlineName(airlineName)
+
+  // 根据航空公司返回特定颜色（使用标准名称）
   const colorMap: Record<string, string> = {
     '中国国际航空': '#C8102E', // 国航红
-    '国际航空': '#C8102E', // 国航红
     '中国东方航空': '#0066CC', // 东航蓝
-    '东方航空': '#0066CC', // 东航蓝
     '中国南方航空': '#E60012', // 南航红
-    '南方航空': '#E60012', // 南航红
     '海南航空': '#FFD700', // 海航金
     '河北航空': '#1E88E5', // 河北航空蓝
   }
-  
+
+  // 直接匹配
+  if (colorMap[normalizedName]) {
+    return colorMap[normalizedName]
+  }
+
+  // 模糊匹配
   const sortedColors = Object.entries(colorMap).sort((a, b) => b[0].length - a[0].length)
   for (const [airline, color] of sortedColors) {
-    if (airlineName.includes(airline)) {
+    if (normalizedName.includes(airline)) {
       return color
     }
   }
-  
+
   return '#667eea' // 默认颜色
 }

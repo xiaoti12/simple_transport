@@ -1,11 +1,12 @@
 import type { AIConfig, TripRecord } from '@/types'
+import { normalizeAirlineName } from '@/utils/airlineUtils'
 
 // JSON Schema定义多张票据信息结构
 // 时间自动填充函数：当只有出行时间或到达时间时，将另一个时间自动填充为相同的时间
 function autoFillMissingTime(ticket: any): any {
   const departureTime = ticket.departure?.time
   const arrivalTime = ticket.arrival?.time
-  
+
   // 如果出发时间存在但到达时间不存在，用出发时间填充到达时间
   if (departureTime && !arrivalTime) {
     console.log('🔄 自动填充到达时间:', departureTime)
@@ -13,7 +14,7 @@ function autoFillMissingTime(ticket: any): any {
       ticket.arrival.time = departureTime
     }
   }
-  
+
   // 如果到达时间存在但出发时间不存在，用到达时间填充出发时间
   if (arrivalTime && !departureTime) {
     console.log('🔄 自动填充出发时间:', arrivalTime)
@@ -21,7 +22,7 @@ function autoFillMissingTime(ticket: any): any {
       ticket.departure.time = arrivalTime
     }
   }
-  
+
   return ticket
 }
 
@@ -47,7 +48,7 @@ export const ticketsSchema = {
                 description: "出发时间，格式: YYYY-MM-DDTHH:mm，如果无法识别可为空字符串"
               },
               city: {
-                type: "string", 
+                type: "string",
                 description: "出发城市名称"
               },
               station: {
@@ -69,7 +70,7 @@ export const ticketsSchema = {
                 description: "到达城市名称"
               },
               station: {
-                type: "string", 
+                type: "string",
                 description: "到达站点（机场或火车站），如果无法识别可为空字符串"
               }
             },
@@ -84,7 +85,7 @@ export const ticketsSchema = {
             description: "航空公司或铁路公司名称，如果无法识别可为空字符串"
           },
           flightNumber: {
-            type: "string", 
+            type: "string",
             description: "航班号或车次号，如果无法识别可为空字符串"
           }
         },
@@ -204,6 +205,13 @@ ${JSON.stringify(ticketsSchema, null, 2)}
           // 应用时间自动填充逻辑  
           const processedTicket = autoFillMissingTime(ticket)
 
+          // 规范化航空公司名称
+          const rawAirline = processedTicket.airline || ''
+          const normalizedAirline = normalizeAirlineName(rawAirline)
+          if (rawAirline && rawAirline !== normalizedAirline) {
+            console.log(`✈️ 航空公司名称规范化: "${rawAirline}" → "${normalizedAirline}"`)
+          }
+
           const tripRecord: Partial<TripRecord> = {
             type: processedTicket.type || 'train',
             date: processedTicket.departure?.time ? processedTicket.departure.time.split('T')[0] : new Date().toISOString().split('T')[0],
@@ -218,7 +226,7 @@ ${JSON.stringify(ticketsSchema, null, 2)}
               station: processedTicket.arrival?.station || ''
             },
             price: processedTicket.price || 0,
-            airline: processedTicket.airline || '',
+            airline: normalizedAirline,
             flightNumber: processedTicket.flightNumber || '',
             travelers: ['我'] // AI录入默认出行人为"我"
           }
@@ -339,6 +347,13 @@ ${textContent}`
           // 应用时间自动填充逻辑  
           const processedTicket = autoFillMissingTime(ticket)
 
+          // 规范化航空公司名称
+          const rawAirline = processedTicket.airline || ''
+          const normalizedAirline = normalizeAirlineName(rawAirline)
+          if (rawAirline && rawAirline !== normalizedAirline) {
+            console.log(`✈️ 航空公司名称规范化: "${rawAirline}" → "${normalizedAirline}"`)
+          }
+
           const tripRecord: Partial<TripRecord> = {
             type: processedTicket.type || 'train',
             date: processedTicket.departure?.time ? processedTicket.departure.time.split('T')[0] : new Date().toISOString().split('T')[0],
@@ -353,7 +368,7 @@ ${textContent}`
               station: processedTicket.arrival?.station || ''
             },
             price: processedTicket.price || 0,
-            airline: processedTicket.airline || '',
+            airline: normalizedAirline,
             flightNumber: processedTicket.flightNumber || '',
             travelers: ['我'] // AI录入默认出行人为"我"
           }
@@ -380,7 +395,7 @@ ${textContent}`
   async testConnection(): Promise<boolean> {
     try {
       console.log('🔍 测试AI服务连接:', this.config.baseUrl)
-      
+
       const response = await fetch(`${this.config.baseUrl}/models`, {
         method: 'GET',
         headers: {

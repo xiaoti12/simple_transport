@@ -112,6 +112,7 @@ export class AIService {
     })
 
     try {
+      const currentYear = new Date().getFullYear()
       const messages = [
         {
           role: "system",
@@ -127,7 +128,8 @@ ${JSON.stringify(ticketsSchema, null, 2)}
 4. 如果是火车票，type为"train"；飞机票为"flight"
 5. 航站楼、机场、价格等信息如果图片中没有或无法识别，可以填空字符串或0
 6. 如果图片中有多张票，请都识别出来放在tickets数组中
-7. 只返回JSON数据，不要其他解释文字`
+7. 只返回JSON数据，不要其他解释文字
+8. 当前年份为 ${currentYear}，如果原始信息中没有年份，请使用这个年份`
         },
         {
           role: "user",
@@ -254,6 +256,7 @@ ${JSON.stringify(ticketsSchema, null, 2)}
     })
 
     try {
+      const currentYear = new Date().getFullYear()
       const messages = [
         {
           role: "system",
@@ -270,7 +273,8 @@ ${JSON.stringify(ticketsSchema, null, 2)}
 5. 航站楼、机场、价格等信息如果文字中没有或无法识别，可以填空字符串或0
 6. 如果文字中有多张票的信息，请都识别出来放在tickets数组中
 7. 只返回JSON数据，不要其他解释文字
-8. 请仔细分析文字中的时间、地点、价格等信息，尽可能准确提取`
+8. 请仔细分析文字中的时间、地点、价格等信息，尽可能准确提取
+9. 当前年份为 ${currentYear}，如果原始信息中没有年份，请使用这个年份`
         },
         {
           role: "user",

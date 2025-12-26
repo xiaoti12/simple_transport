@@ -34,19 +34,19 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">
               模型名称
             </label>
-            <select v-model="aiConfig.model"
+            <input v-model="aiConfig.model" type="text" list="model-suggestions" placeholder="输入模型名称，如 gpt-4o"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              required>
-              <option value="">请选择模型</option>
-              <optgroup label="OpenAI GPT-4o 系列">
-                <option value="gpt-4o">GPT-4o</option>
-                <option value="gpt-4o-mini">GPT-4o Mini</option>
-              </optgroup>
-              <optgroup label="Google Gemini 2.5 系列">
-                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-              </optgroup>
-            </select>
+              required />
+            <datalist id="model-suggestions">
+              <option value="gpt-4o">GPT-4o</option>
+              <option value="gpt-4o-mini">GPT-4o Mini</option>
+              <option value="gpt-5">GPT-5</option>
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+            </datalist>
+            <p class="text-xs text-gray-500 mt-1">
+              支持任意 OpenAI 兼容格式的模型名称
+            </p>
           </div>
 
           <!-- API Token -->
